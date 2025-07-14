@@ -1,5 +1,5 @@
-OLD  := MMult2Block
-NEW  := MMult2Block2
+OLD  := MMult2Block2
+NEW  := MMult3Avx128
 
 #
 # sample makefile
@@ -7,7 +7,7 @@ NEW  := MMult2Block2
 
 CC         := gcc
 LINKER     := $(CC)
-CFLAGS     := -O2 -Wall -msse3
+CFLAGS     := -O2 -Wall -march=native
 LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
