@@ -19,7 +19,7 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
         int j_end = (j + BLOCK_SIZE) < n ? (j + BLOCK_SIZE) : n;
         for (int ii = i; ii < i_end; ii++) {
           for (int pp = p; pp < p_end; pp++) {
-            register double aip = a[ii * k + pp];
+            register double aip = a[ii * lda + pp];
             for (int jj = j; jj < j_end; jj++) {
               C( ii,jj ) += aip * B( pp,jj );
             }
