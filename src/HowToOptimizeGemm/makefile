@@ -1,5 +1,5 @@
-OLD  := MMult3Avx256
-NEW  := MMult3Avx512
+OLD  := MMult0
+NEW  := MMult0
 
 #
 # sample makefile
