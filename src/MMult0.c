@@ -18,5 +18,3 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
   }
 }
 
-
-  
