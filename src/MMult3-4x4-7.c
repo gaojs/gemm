@@ -55,13 +55,13 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
        A( 1, p ) 
        A( 2, p ) 
        A( 3, p ) */
-       a_0p_reg,
-       a_1p_reg,
-       a_2p_reg,
-       a_3p_reg;
+       b_p0_reg,
+       b_p1_reg,
+       b_p2_reg,
+       b_p3_reg;
   double 
     /* Point to the current elements in the four columns of B */
-    *b_p0_pntr, *b_p1_pntr, *b_p2_pntr, *b_p3_pntr; 
+    *a_0p_pntr, *a_1p_pntr, *a_2p_pntr, *b_3p_pntr; 
 
   c_00_reg = 0.0;   c_01_reg = 0.0;   c_02_reg = 0.0;   c_03_reg = 0.0;
   c_10_reg = 0.0;   c_11_reg = 0.0;   c_12_reg = 0.0;   c_13_reg = 0.0;
@@ -69,39 +69,39 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_30_reg = 0.0;   c_31_reg = 0.0;   c_32_reg = 0.0;   c_33_reg = 0.0;
 
   for (int p=0; p<k; p++ ){
-    a_0p_reg = A( 0, p );
-    a_1p_reg = A( 1, p );
-    a_2p_reg = A( 2, p );
-    a_3p_reg = A( 3, p );
+    b_p0_reg = B( p, 0 );
+    b_p1_reg = B( p, 1 );
+    b_p2_reg = B( p, 2 );
+    b_p3_reg = B( p, 3 );
 	  
-    b_p0_pntr = &B( p, 0 );
-    b_p1_pntr = &B( p, 1 );
-    b_p2_pntr = &B( p, 2 );
-    b_p3_pntr = &B( p, 3 );	  
+    a_0p_pntr = &A( 0, p );
+    a_1p_pntr = &A( 1, p );
+    a_2p_pntr = &A( 2, p );
+    a_3p_pntr = &A( 3, p );  
 
     /* First row */
-    c_00_reg += a_0p_reg * *b_p0_pntr;     
-    c_01_reg += a_0p_reg * *b_p1_pntr;     
-    c_02_reg += a_0p_reg * *b_p2_pntr;     
-    c_03_reg += a_0p_reg * *b_p3_pntr;     
+    c_00_reg += *a_0p_pntr * b_p0_reg;
+    c_10_reg += *a_1p_pntr * b_p0_reg;
+    c_20_reg += *a_2p_pntr * b_p0_reg;
+    c_30_reg += *a_3p_pntr * b_p0_reg;
 
     /* Second row */
-    c_10_reg += a_1p_reg * *b_p0_pntr;     
-    c_11_reg += a_1p_reg * *b_p1_pntr;     
-    c_12_reg += a_1p_reg * *b_p2_pntr;     
-    c_13_reg += a_1p_reg * *b_p3_pntr;     
+    c_01_reg += *a_0p_pntr * b_p1_reg;
+    c_11_reg += *a_1p_pntr * b_p1_reg;
+    c_21_reg += *a_2p_pntr * b_p1_reg;
+    c_31_reg += *a_3p_pntr * b_p1_reg;
 
     /* Third row */
-    c_20_reg += a_2p_reg * *b_p0_pntr;     
-    c_21_reg += a_2p_reg * *b_p1_pntr;     
-    c_22_reg += a_2p_reg * *b_p2_pntr;     
-    c_23_reg += a_2p_reg * *b_p3_pntr;     
+    c_02_reg += *a_0p_pntr * b_p2_reg;
+    c_12_reg += *a_1p_pntr * b_p2_reg;
+    c_22_reg += *a_2p_pntr * b_p2_reg;
+    c_32_reg += *a_3p_pntr * b_p2_reg;
 
     /* Four row */
-    c_30_reg += a_3p_reg * *b_p0_pntr++;     
-    c_31_reg += a_3p_reg * *b_p1_pntr++;     
-    c_32_reg += a_3p_reg * *b_p2_pntr++;     
-    c_33_reg += a_3p_reg * *b_p3_pntr++;     
+    c_03_reg += *a_0p_pntr++ * b_p3_reg;
+    c_13_reg += *a_1p_pntr++ * b_p3_reg;
+    c_23_reg += *a_2p_pntr++ * b_p3_reg;
+    c_33_reg += *a_3p_pntr++ * b_p3_reg;
   }
 
   C( 0, 0 ) += c_00_reg;   C( 0, 1 ) += c_01_reg;   C( 0, 2 ) += c_02_reg;   C( 0, 3 ) += c_03_reg;
