@@ -93,7 +93,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     /* First row */
     c_00_reg += a_0p_reg * b_p0_reg;
     c_10_reg += a_1p_reg * b_p0_reg;
-    c_20_reg += a_2p_reg  * b_p0_reg;
+    c_20_reg += a_2p_reg * b_p0_reg;
     c_30_reg += a_3p_reg * b_p0_reg;
 
     /* Second row */
