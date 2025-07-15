@@ -4,8 +4,8 @@
 #define C(i,j) c[ (i)*ldc + (j) ]
 
 /* Block sizes */
-#define nc 256
-#define kc 128
+#define nc 128
+#define kc 256
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
@@ -22,7 +22,7 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
   for (int p=0; p<k; p+=kc ){
     int pb = min( k-p, kc );
     for (int i=0; i<n; i+=nc ){
-      int ib = min( m-i, nc );
+      int ib = min( n-i, nc );
       InnerKernel( m, ib, pb, &A( 0, p), lda, &B(p, i ), ldb, &C( 0,i ), ldc );
     }
   }
@@ -32,8 +32,8 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *b, int ldb,
                                        double *c, int ldc )
 {
-  for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */
-    for (int j=0; j<n; j+=4 ){ /* Loop over the columns of C, unrolled by 4 */
+  for (int j=0; j<n; j+=4 ){ /* Loop over the rows of C */
+    for (int i=0; i<m; i+=4 ){ /* Loop over the columns of C, unrolled by 4 */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
 	   one routine (four inner products) */
       AddDot4x4( k, &A( i,0 ), lda, &B( 0,j ), ldb, &C( i,j ), ldc );
