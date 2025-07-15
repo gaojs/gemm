@@ -40,34 +40,34 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
      in the original matrix C */ 
 
   /* First row */
-  AddDot( k, &A( 0, 0 ), ldb, &B( 0, 0 ), &C( 0, 0 ) );
-  AddDot( k, &A( 0, 0 ), ldb, &B( 0, 1 ), &C( 0, 1 ) );
-  AddDot( k, &A( 0, 0 ), ldb, &B( 0, 2 ), &C( 0, 2 ) );
-  AddDot( k, &A( 0, 0 ), ldb, &B( 0, 3 ), &C( 0, 3 ) );
+  AddDot( k, &A( 0, 0 ), &B( 0, 0 ), ldb, &C( 0, 0 ) );
+  AddDot( k, &A( 0, 0 ), &B( 0, 1 ), ldb, &C( 0, 1 ) );
+  AddDot( k, &A( 0, 0 ), &B( 0, 2 ), ldb, &C( 0, 2 ) );
+  AddDot( k, &A( 0, 0 ), &B( 0, 3 ), ldb, &C( 0, 3 ) );
 
   /* Second row */
-  AddDot( k, &A( 1, 0 ), ldb, &B( 0, 0 ), &C( 1, 0 ) );
-  AddDot( k, &A( 1, 0 ), ldb, &B( 0, 1 ), &C( 1, 1 ) );
-  AddDot( k, &A( 1, 0 ), ldb, &B( 0, 2 ), &C( 1, 2 ) );
-  AddDot( k, &A( 1, 0 ), ldb, &B( 0, 3 ), &C( 1, 3 ) );
+  AddDot( k, &A( 1, 0 ), &B( 0, 0 ), ldb, &C( 1, 0 ) );
+  AddDot( k, &A( 1, 0 ), &B( 0, 1 ), ldb, &C( 1, 1 ) );
+  AddDot( k, &A( 1, 0 ), &B( 0, 2 ), ldb, &C( 1, 2 ) );
+  AddDot( k, &A( 1, 0 ), &B( 0, 3 ), ldb, &C( 1, 3 ) );
 
   /* Third row */
-  AddDot( k, &A( 2, 0 ), ldb, &B( 0, 0 ), &C( 2, 0 ) );
-  AddDot( k, &A( 2, 0 ), ldb, &B( 0, 1 ), &C( 2, 1 ) );
-  AddDot( k, &A( 2, 0 ), ldb, &B( 0, 2 ), &C( 2, 2 ) );
-  AddDot( k, &A( 2, 0 ), ldb, &B( 0, 3 ), &C( 2, 3 ) );
+  AddDot( k, &A( 2, 0 ), &B( 0, 0 ), ldb, &C( 2, 0 ) );
+  AddDot( k, &A( 2, 0 ), &B( 0, 1 ), ldb, &C( 2, 1 ) );
+  AddDot( k, &A( 2, 0 ), &B( 0, 2 ), ldb, &C( 2, 2 ) );
+  AddDot( k, &A( 2, 0 ), &B( 0, 3 ), ldb, &C( 2, 3 ) );
 
   /* Four row */
-  AddDot( k, &A( 3, 0 ), ldb, &B( 0, 0 ), &C( 3, 0 ) );
-  AddDot( k, &A( 3, 0 ), ldb, &B( 0, 1 ), &C( 3, 1 ) );
-  AddDot( k, &A( 3, 0 ), ldb, &B( 0, 2 ), &C( 3, 2 ) );
-  AddDot( k, &A( 3, 0 ), ldb, &B( 0, 3 ), &C( 3, 3 ) );
+  AddDot( k, &A( 3, 0 ), &B( 0, 0 ), ldb, &C( 3, 0 ) );
+  AddDot( k, &A( 3, 0 ), &B( 0, 1 ), ldb, &C( 3, 1 ) );
+  AddDot( k, &A( 3, 0 ), &B( 0, 2 ), ldb, &C( 3, 2 ) );
+  AddDot( k, &A( 3, 0 ), &B( 0, 3 ), ldb, &C( 3, 3 ) );
 }
 
 
 /* Create macro to let X( i ) equal the ith element of x */
 #define Y(i) y[ (i)*incy ]
-void AddDot( int k, double *x, int incy,  double *y, double *gamma )
+void AddDot( int k, double *x, double *y, int incy, double *gamma )
 {
   /* compute gamma := x' * y + gamma with vectors x and y of length n.
      Here x starts at location x with increment (stride) incx and 
