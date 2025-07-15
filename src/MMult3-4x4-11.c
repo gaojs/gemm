@@ -4,7 +4,7 @@
 #define C(i,j) c[ (i)*ldc + (j) ]
 
 /* Block sizes */
-#define mc 256
+#define nc 256
 #define kc 128
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
@@ -21,9 +21,9 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
   /* This time, we compute a mc x n block of C by a call to the InnerKernel */
   for (int p=0; p<k; p+=kc ){
     int pb = min( k-p, kc );
-    for (int i=0; i<m; i+=mc ){
-      int ib = min( m-i, mc );
-      InnerKernel( ib, n, pb, &A( i,p ), lda, &B(p, 0 ), ldb, &C( i,0 ), ldc );
+    for (int i=0; i<n; i+=nc ){
+      int ib = min( m-i, nc );
+      InnerKernel( m, ib, pb, &A( 0, p), lda, &B(p, i ), ldb, &C( 0,i ), ldc );
     }
   }
 }
