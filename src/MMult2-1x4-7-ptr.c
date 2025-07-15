@@ -4,7 +4,8 @@
 #define C(i,j) c[ (i)*ldc + (j) ]
 
 /* Routine for computing C = A * B + C */
-void AddDot1x4( int, double *, int,  double *, int, double *, int );
+void AddDot1x4( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc );
+
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
                                     double *c, int ldc )
@@ -31,7 +32,7 @@ void AddDot1x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
 	  
      in the original matrix C.
 
-     We next use indirect addressing */
+     In this version, we use pointer to track where in four columns of B we are */
 
   register double 
     /* hold contributions to
@@ -53,39 +54,16 @@ void AddDot1x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_02_reg = 0.0; 
   c_03_reg = 0.0;
  
-  for (int p=0; p<k; p+=4 ){
+  for (int p=0; p<k; p++){
     a_0p_reg = A( 0, p );
 
-    c_00_reg += a_0p_reg * *bp0_pntr;
-    c_01_reg += a_0p_reg * *bp1_pntr;
-    c_02_reg += a_0p_reg * *bp2_pntr;
-    c_03_reg += a_0p_reg * *bp3_pntr;
-
-    a_0p_reg = A( 0, p+1 );
-
-    c_00_reg += a_0p_reg * *(bp0_pntr+1);
-    c_01_reg += a_0p_reg * *(bp1_pntr+1);
-    c_02_reg += a_0p_reg * *(bp2_pntr+1);
-    c_03_reg += a_0p_reg * *(bp3_pntr+1);
-
-    a_0p_reg = A( 0, p+2 );
-
-    c_00_reg += a_0p_reg * *(bp0_pntr+2);
-    c_01_reg += a_0p_reg * *(bp1_pntr+2);
-    c_02_reg += a_0p_reg * *(bp2_pntr+2);
-    c_03_reg += a_0p_reg * *(bp3_pntr+2);
-
-    a_0p_reg = A( 0, p+3 );
-
-    c_00_reg += a_0p_reg * *(bp0_pntr+3);
-    c_01_reg += a_0p_reg * *(bp1_pntr+3);
-    c_02_reg += a_0p_reg * *(bp2_pntr+3);
-    c_03_reg += a_0p_reg * *(bp3_pntr+3);
-
-    bp0_pntr+=4;
-    bp1_pntr+=4;
-    bp2_pntr+=4;
-    bp3_pntr+=4;
+    c_00_reg += a_0p_reg * bp0_pntr[0];
+    c_01_reg += a_0p_reg * bp1_pntr[0];
+    c_02_reg += a_0p_reg * bp2_pntr[0];
+    c_03_reg += a_0p_reg * bp3_pntr[0];
+    
+    bp0_pntr+=ldb, bp1_pntr+=ldb; 
+    bp2_pntr+=ldb, bp3_pntr+=ldb;
   }
 
   C( 0, 0 ) += c_00_reg; 

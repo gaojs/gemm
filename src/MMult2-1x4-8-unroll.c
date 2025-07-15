@@ -4,7 +4,8 @@
 #define C(i,j) c[ (i)*ldc + (j) ]
 
 /* Routine for computing C = A * B + C */
-void AddDot1x4( int, double *, int,  double *, int, double *, int );
+void AddDot1x4( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc );
+
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
                                     double *c, int ldc )
@@ -53,34 +54,46 @@ void AddDot1x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_02_reg = 0.0; 
   c_03_reg = 0.0;
  
-  for (int p=0; p<k; p+=4 ){
+  for (int p=0; p<k; p+=4){
     a_0p_reg = A( 0, p );
 
-    c_00_reg += a_0p_reg * *bp0_pntr++;
-    c_01_reg += a_0p_reg * *bp1_pntr++;
-    c_02_reg += a_0p_reg * *bp2_pntr++;
-    c_03_reg += a_0p_reg * *bp3_pntr++;
+    c_00_reg += a_0p_reg * bp0_pntr[0];
+    c_01_reg += a_0p_reg * bp1_pntr[0];
+    c_02_reg += a_0p_reg * bp2_pntr[0];
+    c_03_reg += a_0p_reg * bp3_pntr[0];
+
+    bp0_pntr+=ldb, bp1_pntr+=ldb; 
+    bp2_pntr+=ldb, bp3_pntr+=ldb;
 
     a_0p_reg = A( 0, p+1 );
 
-    c_00_reg += a_0p_reg * *bp0_pntr++;
-    c_01_reg += a_0p_reg * *bp1_pntr++;
-    c_02_reg += a_0p_reg * *bp2_pntr++;
-    c_03_reg += a_0p_reg * *bp3_pntr++;
+    c_00_reg += a_0p_reg * bp0_pntr[0];
+    c_01_reg += a_0p_reg * bp1_pntr[0];
+    c_02_reg += a_0p_reg * bp2_pntr[0];
+    c_03_reg += a_0p_reg * bp3_pntr[0];
+
+    bp0_pntr+=ldb, bp1_pntr+=ldb; 
+    bp2_pntr+=ldb, bp3_pntr+=ldb;
 
     a_0p_reg = A( 0, p+2 );
 
-    c_00_reg += a_0p_reg * *bp0_pntr++;
-    c_01_reg += a_0p_reg * *bp1_pntr++;
-    c_02_reg += a_0p_reg * *bp2_pntr++;
-    c_03_reg += a_0p_reg * *bp3_pntr++;
+    c_00_reg += a_0p_reg * bp0_pntr[0];
+    c_01_reg += a_0p_reg * bp1_pntr[0];
+    c_02_reg += a_0p_reg * bp2_pntr[0];
+    c_03_reg += a_0p_reg * bp3_pntr[0];
+
+    bp0_pntr+=ldb, bp1_pntr+=ldb; 
+    bp2_pntr+=ldb, bp3_pntr+=ldb;
 
     a_0p_reg = A( 0, p+3 );
 
-    c_00_reg += a_0p_reg * *bp0_pntr++;
-    c_01_reg += a_0p_reg * *bp1_pntr++;
-    c_02_reg += a_0p_reg * *bp2_pntr++;
-    c_03_reg += a_0p_reg * *bp3_pntr++;
+    c_00_reg += a_0p_reg * bp0_pntr[0];
+    c_01_reg += a_0p_reg * bp1_pntr[0];
+    c_02_reg += a_0p_reg * bp2_pntr[0];
+    c_03_reg += a_0p_reg * bp3_pntr[0];
+
+    bp0_pntr+=ldb, bp1_pntr+=ldb; 
+    bp2_pntr+=ldb, bp3_pntr+=ldb;
   }
 
   C( 0, 0 ) += c_00_reg; 

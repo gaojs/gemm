@@ -1,4 +1,4 @@
-version = 'MMult2-1x4-7';
+version = 'MMult2-1x4-7-ptr';
 MY_MMult = [
 100 4.106776e+00 7.993606e-15 
 200 5.565217e+00 1.421085e-14 
