@@ -1,5 +1,5 @@
-OLD  := MMult3-4x4-10-avx
-NEW  := MMult3-4x4-11-block
+OLD  := MMult3-4x4-11-block
+NEW  := MMult3-4x4-12
 
 #
 # sample makefile
