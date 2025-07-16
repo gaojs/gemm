@@ -50,7 +50,7 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
 	 one routine (four inner products) */
       if( i == 0 )
         PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot4x4( k, &packedA[ i*k ], k , &B( 0,j ), ldb, &C( i,j ), ldc );
+      AddDot4x4( k, &packedA[ i*k ], k , &B( 0,j ), 4, &C( i,j ), ldc );
     }
   }
 }
@@ -127,14 +127,6 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     b_p2_a_p3_vreg,
     a_0p_vreg, a_1p_vreg, a_2p_vreg, a_3p_vreg; 
 
-  double 
-    /* Point to the current elements in the four columns of B */
-    *a_0p_pntr, *a_1p_pntr, *a_2p_pntr, *a_3p_pntr; 
-    
-  a_0p_pntr = &A( 0, 0 );
-  a_1p_pntr = &A( 1, 0 );
-  a_2p_pntr = &A( 2, 0 );
-  a_3p_pntr = &A( 3, 0 );
 
   c_00_c_01_vreg.v = _mm_setzero_pd();   
   c_10_c_11_vreg.v = _mm_setzero_pd();
