@@ -1,4 +1,5 @@
-/* Create macros so that the matrices are stored in row-major order */
+/* Create macros so that the matrices are stored in column-major order */
+
 #define A(i,j) a[ (i)*lda + (j) ]
 #define B(i,j) b[ (i)*ldb + (j) ]
 #define C(i,j) c[ (i)*ldc + (j) ]
@@ -10,21 +11,24 @@
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
 /* Routine for computing C = A * B + C */
+
 void AddDot4x4( int, double *, int, double *, int, double *, int );
-void InnerKernel( int m, int n, int k, double *a, int lda, 
-    double *b, int ldb, double *c, int ldc, int first_time );
 void PackMatrixA( int, double *, int, double * );
 void PackMatrixB( int, double *, int, double * );
+void InnerKernel( int, int, int, double *, int, double *, int, double *, int, int );
 
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
                                     double *c, int ldc )
 {
+  int i, p, pb, ib;
+
   /* This time, we compute a mc x n block of C by a call to the InnerKernel */
-  for (int p=0; p<k; p+=kc ){
-    int pb = min( k-p, kc );
-    for (int i=0; i<m; i+=mc ){
-      int ib = min( m-i, mc );
+
+  for ( p=0; p<k; p+=kc ){
+    pb = min( k-p, kc );
+    for ( i=0; i<m; i+=mc ){
+      ib = min( m-i, mc );
       InnerKernel( ib, n, pb, &A( i,p ), lda, &B(p, 0 ), ldb, &C( i,0 ), ldc, i==0 );
     }
   }
@@ -34,16 +38,17 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *b, int ldb,
                                        double *c, int ldc, int first_time )
 {
-  double packedA[ m * k ], packedB[ k*n ];
+  int i, j;
+  double 
+    packedA[ m * k ], packedB[ k*n ];
 
-  for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */
-
-    if ( first_time )
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-    for (int j=0; j<n; j+=4 ){ /* Loop over the columns of C, unrolled by 4 */
+  for ( j=0; j<n; j+=4 ){        /* Loop over the columns of C, unrolled by 4 */
+    PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
+    for ( i=0; i<m; i+=4 ){        /* Loop over the rows of C */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	    one routine (four inner products) */
-      if ( j == 0 ) PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
+	 one routine (four inner products) */
+      if ( j == 0 ) 
+	PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
       AddDot4x4( k, &packedA[ i*k ], 4, &packedB[ j*k ], k, &C( i,j ), ldc );
     }
   }
@@ -51,8 +56,11 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
 
 void PackMatrixA( int k, double *a, int lda, double *a_to )
 {
-  for(int j=0; j<k; j++){  /* loop over columns of A */
-    double *a_ij_pntr = &A( 0, j );
+  int j;
+
+  for( j=0; j<k; j++){  /* loop over columns of A */
+    double 
+      *a_ij_pntr = &A( 0, j );
 
     *a_to     = *a_ij_pntr;
     *(a_to+1) = *(a_ij_pntr+1);
@@ -65,11 +73,12 @@ void PackMatrixA( int k, double *a, int lda, double *a_to )
 
 void PackMatrixB( int k, double *b, int ldb, double *b_to )
 {
+  int i;
   double 
     *b_i0_pntr = &B( 0, 0 ), *b_i1_pntr = &B( 0, 1 ),
     *b_i2_pntr = &B( 0, 2 ), *b_i3_pntr = &B( 0, 3 );
 
-  for(int i=0; i<k; i++){  /* loop over rows of B */
+  for( i=0; i<k; i++){  /* loop over rows of B */
     *b_to++ = *b_i0_pntr++;
     *b_to++ = *b_i1_pntr++;
     *b_to++ = *b_i2_pntr++;
@@ -109,6 +118,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
 
      And now we use vector registers and instructions */
 
+  int p;
   v2df_t
     c_00_c_10_vreg,    c_01_c_11_vreg,    c_02_c_12_vreg,    c_03_c_13_vreg,
     c_20_c_30_vreg,    c_21_c_31_vreg,    c_22_c_32_vreg,    c_23_c_33_vreg,
@@ -125,7 +135,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_22_c_32_vreg.v = _mm_setzero_pd();   
   c_23_c_33_vreg.v = _mm_setzero_pd(); 
 
-  for (int p=0; p<k; p++ ){
+  for ( p=0; p<k; p++ ){
     a_0p_a_1p_vreg.v = _mm_load_pd( (double *) a );
     a_2p_a_3p_vreg.v = _mm_load_pd( (double *) ( a+2 ) );
     a += 4;
