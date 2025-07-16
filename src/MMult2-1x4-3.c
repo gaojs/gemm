@@ -49,6 +49,6 @@ void AddDot( int k, double *x,  double *y, int incy, double *gamma )
         y starts at location y with increment (stride) incy.
   */
   for (int p=0; p<k; p++ ){
-    *gamma += x[p] * Y(p);     
+    *gamma += x[p] * Y(p);
   }
 }
