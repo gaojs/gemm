@@ -1,5 +1,5 @@
-OLD  := MMult2-1x4-7
-NEW  := MMult2-1x4-8-unroll
+OLD  := MMult2-1x4-3
+NEW  := MMult3-4x4-3
 
 #
 # sample makefile
