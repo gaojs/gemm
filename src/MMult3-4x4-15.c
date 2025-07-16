@@ -124,7 +124,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     c_00_c_01_vreg,    c_10_c_11_vreg,    c_20_c_21_vreg,    c_30_c_31_vreg,
     c_02_c_03_vreg,    c_12_c_13_vreg,    c_22_c_23_vreg,    c_32_c_33_vreg,
     b_p0_b_p1_vreg,
-    b_p2_a_p3_vreg,
+    b_p2_b_p3_vreg,
     a_0p_vreg, a_1p_vreg, a_2p_vreg, a_3p_vreg; 
 
 
@@ -155,10 +155,10 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     c_30_c_31_vreg.v += a_3p_vreg.v * b_p0_b_p1_vreg.v;
 
     /* Third and fourth rows */
-    c_02_c_03_vreg.v += a_0p_vreg.v * b_p2_a_p3_vreg.v;
-    c_12_c_13_vreg.v += a_1p_vreg.v * b_p2_a_p3_vreg.v;
-    c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_a_p3_vreg.v;
-    c_32_c_33_vreg.v += a_3p_vreg.v * b_p2_a_p3_vreg.v;
+    c_02_c_03_vreg.v += a_0p_vreg.v * b_p2_b_p3_vreg.v;
+    c_12_c_13_vreg.v += a_1p_vreg.v * b_p2_b_p3_vreg.v;
+    c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_b_p3_vreg.v;
+    c_32_c_33_vreg.v += a_3p_vreg.v * b_p2_b_p3_vreg.v;
   }
 
   C( 0, 0 ) += c_00_c_01_vreg.d[0];  C( 1, 0 ) += c_10_c_11_vreg.d[0];  
