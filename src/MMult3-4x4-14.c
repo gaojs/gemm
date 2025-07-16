@@ -145,9 +145,10 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_32_c_33_vreg.v = _mm_setzero_pd(); 
 
   for (int p=0; p<k; p++ ){
-    b_p0_b_p1_vreg.v = _mm_load_pd( (double *) &B( p, 0 ) );
-    b_p2_a_p3_vreg.v = _mm_load_pd( (double *) &B( p, 2 ) );
-
+    b_p0_b_p1_vreg.v = _mm_load_pd( (double *) b );
+    b_p2_a_p3_vreg.v = _mm_load_pd( (double *) (b+2) );
+    b+=4;
+    
     a_0p_vreg.v = _mm_loaddup_pd( (double *) a );   /* load and duplicate */
     a_1p_vreg.v = _mm_loaddup_pd( (double *) (a+1));   /* load and duplicate */
     a_2p_vreg.v = _mm_loaddup_pd( (double *) (a+2) );   /* load and duplicate */
