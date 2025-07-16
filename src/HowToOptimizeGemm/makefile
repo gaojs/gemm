@@ -1,5 +1,5 @@
 OLD  := MMult3-4x4-11-block
-NEW  := MMult3-4x4-13-packa
+NEW  := MMult3-4x4-15-packb
 
 #
 # sample makefile

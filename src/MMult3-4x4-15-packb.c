@@ -42,8 +42,9 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
     for (int j=0; j<n; j+=4 ){ /* Loop over the columns of C, unrolled by 4 */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
 	   one routine (four inner products) */
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot4x4( k, &packedA[ i*k ], k , &packedB[ j*k ], 4 , &C( i,j ), ldc );
+      if( i == 0 )
+        PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot4x4( k, &packedA[ i*k ], k , &packedB[ j*k ], 4, &C( i,j ), ldc );
     }
   }
 }
@@ -66,11 +67,10 @@ void PackMatrixB( int k, double *b, int ldb, double *b_to )
 {
   for(int i=0; i<k; i++){  /* loop over rows of B */
     double *b_ji_pntr = &B( i , 0 );
-
-    *b_to     = *b_ji_pntr;
-    *(b_to+1) = *(b_ji_pntr+1);
-    *(b_to+2) = *(b_ji_pntr+2);
-    *(b_to+3) = *(b_ji_pntr+3);
+    b_to[0] = b_ji_pntr[0];
+    b_to[1] = b_ji_pntr[1];
+    b_to[2] = b_ji_pntr[2];
+    b_to[3] = b_ji_pntr[3];
     b_to += 4;
   }
 }
@@ -110,7 +110,6 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     c_10_c_11_vreg, c_12_c_13_vreg,
     c_20_c_21_vreg, c_22_c_23_vreg,
     c_30_c_31_vreg, c_32_c_33_vreg,
-    b_p2_b_p3_vreg,
     a_0p_vreg, a_1p_vreg, a_2p_vreg, a_3p_vreg,
     b_p0_b_p1_vreg, b_p2_b_p3_vreg; 
 
@@ -124,13 +123,14 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
   c_32_c_33_vreg.v = _mm_setzero_pd();
 
   for (int p=0; p<k; p++ ){
-    a_0p_vreg.v = _mm_loaddup_pd( (double *) a++ );   /* load and duplicate */
-    a_1p_vreg.v = _mm_loaddup_pd( (double *) a++ );   /* load and duplicate */
-    a_2p_vreg.v = _mm_loaddup_pd( (double *) a++ );   /* load and duplicate */
-    a_3p_vreg.v = _mm_loaddup_pd( (double *) a++ );   /* load and duplicate */
+    a_0p_vreg.v = _mm_loaddup_pd( (double *) &a[0] );   /* load and duplicate */
+    a_1p_vreg.v = _mm_loaddup_pd( (double *) &a[1] );   /* load and duplicate */
+    a_2p_vreg.v = _mm_loaddup_pd( (double *) &a[2] );   /* load and duplicate */
+    a_3p_vreg.v = _mm_loaddup_pd( (double *) &a[3] );   /* load and duplicate */
+    a+=4;
 
     b_p0_b_p1_vreg.v = _mm_load_pd( (double *) &b[0] );
-    b_p2_b_p3_vreg.v = _mm_load_pd( (double *) &(b[2] );
+    b_p2_b_p3_vreg.v = _mm_load_pd( (double *) &b[2] );
     b+=4;
 
     /* First row and second rows */
@@ -142,9 +142,6 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     c_20_c_21_vreg.v += a_2p_vreg.v * b_p0_b_p1_vreg.v;
     c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_b_p3_vreg.v;
     c_30_c_31_vreg.v += a_3p_vreg.v * b_p0_b_p1_vreg.v;
-    c_02_c_03_vreg.v += a_0p_vreg.v * b_p2_b_p3_vreg.v;
-    c_12_c_13_vreg.v += a_1p_vreg.v * b_p2_b_p3_vreg.v;
-    c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_b_p3_vreg.v;
     c_32_c_33_vreg.v += a_3p_vreg.v * b_p2_b_p3_vreg.v;
   }
 
