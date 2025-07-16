@@ -40,77 +40,75 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
 
      In this version, we "inline" AddDot */ 
 
-  int p;
-
   /* First row */
-  //  AddDot( k, &A( 0, 0 ), lda, &B( 0, 0 ), &C( 0, 0 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 0, 0 ), &B( 0, 0 ), ldb, &C( 0, 0 ) );
+  for (int p=0; p<k; p++ ){
     C( 0, 0 ) += A( 0, p ) * B( p, 0 );     
   }
-  //  AddDot( k, &A( 0, 0 ), lda, &B( 0, 1 ), &C( 0, 1 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 0, 0 ), &B( 0, 1 ), ldb, &C( 0, 1 ) );
+  for (int p=0; p<k; p++ ){
     C( 0, 1 ) += A( 0, p ) * B( p, 1 );     
   }
-  //  AddDot( k, &A( 0, 0 ), lda, &B( 0, 2 ), &C( 0, 2 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 0, 0 ), &B( 0, 2 ), ldb, &C( 0, 2 ) );
+  for (int p=0; p<k; p++ ){
     C( 0, 2 ) += A( 0, p ) * B( p, 2 );     
   }
-  //  AddDot( k, &A( 0, 0 ), lda, &B( 0, 3 ), &C( 0, 3 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 0, 0 ), &B( 0, 3 ), ldb, &C( 0, 3 ) );
+  for (int p=0; p<k; p++ ){
     C( 0, 3 ) += A( 0, p ) * B( p, 3 );     
   }
 
   /* Second row */
-  //  AddDot( k, &A( 1, 0 ), lda, &B( 0, 0 ), &C( 1, 0 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 1, 0 ), &B( 0, 0 ), ldb, &C( 1, 0 ) );
+  for (int p=0; p<k; p++ ){
     C( 1, 0 ) += A( 1, p ) * B( p, 0 );     
   }
-  //  AddDot( k, &A( 1, 0 ), lda, &B( 0, 1 ), &C( 1, 1 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 1, 0 ), &B( 0, 1 ), ldb, &C( 1, 1 ) );
+  for (int p=0; p<k; p++ ){
     C( 1, 1 ) += A( 1, p ) * B( p, 1 );     
   }
-  //  AddDot( k, &A( 1, 0 ), lda, &B( 0, 2 ), &C( 1, 2 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 1, 0 ), &B( 0, 2 ), ldb, &C( 1, 2 ) );
+  for (int p=0; p<k; p++ ){
     C( 1, 2 ) += A( 1, p ) * B( p, 2 );     
   }
-  //  AddDot( k, &A( 1, 0 ), lda, &B( 0, 3 ), &C( 1, 3 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 1, 0 ), &B( 0, 3 ), ldb, &C( 1, 3 ) );
+  for (int p=0; p<k; p++ ){
     C( 1, 3 ) += A( 1, p ) * B( p, 3 );     
   }
 
   /* Third row */
-  //  AddDot( k, &A( 2, 0 ), lda, &B( 0, 0 ), &C( 2, 0 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 2, 0 ), &B( 0, 0 ), ldb, &C( 2, 0 ) );
+  for (int p=0; p<k; p++ ){
     C( 2, 0 ) += A( 2, p ) * B( p, 0 );     
   }
-  //  AddDot( k, &A( 2, 0 ), lda, &B( 0, 1 ), &C( 2, 1 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 2, 0 ), &B( 0, 1 ), ldb, &C( 2, 1 ) );
+  for (int p=0; p<k; p++ ){
     C( 2, 1 ) += A( 2, p ) * B( p, 1 );     
   }
-  //  AddDot( k, &A( 2, 0 ), lda, &B( 0, 2 ), &C( 2, 2 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 2, 0 ), &B( 0, 2 ), ldb, &C( 2, 2 ) );
+  for (int p=0; p<k; p++ ){
     C( 2, 2 ) += A( 2, p ) * B( p, 2 );     
   }
-  //  AddDot( k, &A( 2, 0 ), lda, &B( 0, 3 ), &C( 2, 3 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 2, 0 ), &B( 0, 3 ), ldb, &C( 2, 3 ) );
+  for (int p=0; p<k; p++ ){
     C( 2, 3 ) += A( 2, p ) * B( p, 3 );     
   }
 
   /* Four row */
-  //  AddDot( k, &A( 3, 0 ), lda, &B( 0, 0 ), &C( 3, 0 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 3, 0 ), &B( 0, 0 ), ldb, &C( 3, 0 ) );
+  for (int p=0; p<k; p++ ){
     C( 3, 0 ) += A( 3, p ) * B( p, 0 );     
   }
-  //  AddDot( k, &A( 3, 0 ), lda, &B( 0, 1 ), &C( 3, 1 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 3, 0 ), &B( 0, 1 ), ldb, &C( 3, 1 ) );
+  for (int p=0; p<k; p++ ){
     C( 3, 1 ) += A( 3, p ) * B( p, 1 );     
   }
-  //  AddDot( k, &A( 3, 0 ), lda, &B( 0, 2 ), &C( 3, 2 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 3, 0 ), &B( 0, 2 ), ldb, &C( 3, 2 ) );
+  for (int p=0; p<k; p++ ){
     C( 3, 2 ) += A( 3, p ) * B( p, 2 );     
   }
-  //  AddDot( k, &A( 3, 0 ), lda, &B( 0, 3 ), &C( 3, 3 ) );
-  for ( p=0; p<k; p++ ){
+  // AddDot( k, &A( 3, 0 ), &B( 0, 3 ), ldb, &C( 3, 3 ) );
+  for (int p=0; p<k; p++ ){
     C( 3, 3 ) += A( 3, p ) * B( p, 3 );     
   }
 }

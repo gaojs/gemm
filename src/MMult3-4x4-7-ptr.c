@@ -38,7 +38,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
 	  
      in the original matrix C 
 
-     In this version, we use pointer to track where in four columns of B we are */
+     In this version, we use pointer to track where in four columns of A we are */
 
   register double 
     /* hold contributions to
@@ -51,14 +51,8 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
        c_20_reg,   c_21_reg,   c_22_reg,   c_23_reg,  
        c_30_reg,   c_31_reg,   c_32_reg,   c_33_reg,
     /* hold 
-       A( 0, p ) 
-       A( 1, p ) 
-       A( 2, p ) 
-       A( 3, p ) */
-       b_p0_reg,
-       b_p1_reg,
-       b_p2_reg,
-       b_p3_reg;
+       B( p, 0 ), B( p, 1 ), B( p, 2 ),B( p, 3 ) */
+       b_p0_reg, b_p1_reg, b_p2_reg, b_p3_reg;
   double 
     /* Point to the current elements in the four columns of B */
     *a_0p_pntr, *a_1p_pntr, *a_2p_pntr, *a_3p_pntr; 
