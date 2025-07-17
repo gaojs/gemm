@@ -4,9 +4,9 @@ The below parameters set this range of values that p takes on
 在测试驱动程序中，有一个循环“for（p=PFIRST；p<=PLAST；p+=PINC）”
 以下参数设置了p的取值范围
 */   
-#define PFIRST 100
-#define PLAST  2000
-#define PINC   100
+#define PFIRST 128
+#define PLAST  2048
+#define PINC   128
 
 /* 
 In the test driver, the m, n, and k dimensions are set to the below 
