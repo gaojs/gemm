@@ -1,13 +1,14 @@
 
 /* Create macros so that the matrices are stored in column-major order */
-
+#include <stddef.h>  // 定义NULL
+#include <stdlib.h>
 #define A(i,j) a[ (i)*lda + (j) ]
 #define B(i,j) b[ (i)*ldb + (j) ]
 #define C(i,j) c[ (i)*ldc + (j) ]
 
 /* Block sizes */
-#define nc 128
-#define kc 512
+#define nc 64
+#define kc 1024
 #define ma 2048
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
@@ -39,21 +40,35 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *c, int ldc, int first_time )
 {
   int i, j;
-  static double 
-    packedA[ ma * kc ];
-  double packedB[ k * n ];
+  static double *packedA = NULL;  // 静态指针，动态分配
+  static int max_packedA_size = 0;
+  // 动态分配64字节对齐的packedB（直接用aligned_alloc，不封装函数）
+
+    // 初始化packedA（首次调用或需要扩容时）
+  if (first_time) {
+    int required_size = m * k * sizeof(double);
+    if (packedA == NULL || required_size > max_packedA_size) {
+      if (packedA != NULL) free(packedA);  // 释放旧内存
+      packedA = (double*)aligned_alloc(64, required_size);  // 64字节对齐
+      max_packedA_size = required_size;
+    }
+  }
+
+  double *packedB = (double*)aligned_alloc(64, k * n * sizeof(double));
   for ( i=0; i<m; i+=4 ){   
     if(first_time)     /* Loop over the columns of C, unrolled by 4 */
       PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
     for ( j=0; j<n; j+=32 ){        /* Loop over the rows of C */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
 	 one routine (four inner products) */
-      if( i == 0 )
-        PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot4x32( k, &packedA[ i*k ], k , &packedB[ j*k ], 32, &C( i,j ), ldc );
+      if(i==0)
+      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot4x32( k, &packedA[ i*k ], k , &packedB[j*k], 32, &C( i,j ), ldc );
     }
   }
+    free(packedB);  // 释放packedB
 }
+
 
 void PackMatrixA( int k, double *a, int lda, double *a_to )
 {
@@ -146,10 +161,10 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
 
   int p;
   for ( p=0; p<k; p++ ){
-    b0x_7x.v = _mm512_loadu_pd( (double *) b );
-    b8x_15x.v = _mm512_loadu_pd( (double *) (b+8) );
-    b16x_23x.v = _mm512_loadu_pd( (double *) (b+16) );
-    b24x_31x.v = _mm512_loadu_pd( (double *) (b+24) );
+    b0x_7x.v = _mm512_load_pd( (double *) b );
+    b8x_15x.v = _mm512_load_pd( (double *) (b+8) );
+    b16x_23x.v = _mm512_load_pd( (double *) (b+16) );
+    b24x_31x.v = _mm512_load_pd( (double *) (b+24) );
     b+=32;
 
 	  ax0.v = _mm512_broadcastsd_pd(_mm_load_sd(a));
@@ -159,20 +174,11 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
 
     a+=4;
 
-    // c0000_0007.v += ax0.v * b0x_7x.v;
-    // c0100_0107.v += ax1.v * b0x_7x.v;
-    // c0200_0207.v += ax2.v * b0x_7x.v;
-    // c0300_0307.v += ax3.v * b0x_7x.v;    
 
     c0000_0007.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b0x_7x.v), c0000_0007.v);
     c0100_0107.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b0x_7x.v), c0100_0107.v);
     c0200_0207.v = _mm512_add_pd(_mm512_mul_pd(ax2.v, b0x_7x.v), c0200_0207.v);
     c0300_0307.v = _mm512_add_pd(_mm512_mul_pd(ax3.v, b0x_7x.v), c0300_0307.v);
-
-    // c0008_0015.v += ax0.v * b8x_15x.v;
-    // c0108_0115.v += ax1.v * b8x_15x.v;
-    // c0208_0215.v += ax2.v * b8x_15x.v;
-    // c0308_0315.v += ax3.v * b8x_15x.v;   
 
     c0008_0015.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b8x_15x.v), c0008_0015.v);
     c0108_0115.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b8x_15x.v), c0108_0115.v);
@@ -180,20 +186,11 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
     c0308_0315.v = _mm512_add_pd(_mm512_mul_pd(ax3.v, b8x_15x.v), c0308_0315.v);
 
 
-    // c0016_0023.v += ax0.v * b16x_23x.v;
-    // c0116_0123.v += ax1.v * b16x_23x.v;
-    // c0216_0223.v += ax2.v * b16x_23x.v;
-    // c0316_0323.v += ax3.v * b16x_23x.v;   
-
     c0016_0023.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b16x_23x.v), c0016_0023.v);
     c0116_0123.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b16x_23x.v), c0116_0123.v);
     c0216_0223.v = _mm512_add_pd(_mm512_mul_pd(ax2.v, b16x_23x.v), c0216_0223.v);
     c0316_0323.v = _mm512_add_pd(_mm512_mul_pd(ax3.v, b16x_23x.v), c0316_0323.v);
-
-    // c0024_0031.v += ax0.v * b24x_31x.v;
-    // c0124_0131.v += ax1.v * b24x_31x.v;
-    // c0224_0231.v += ax2.v * b24x_31x.v;
-    // c0324_0331.v += ax3.v * b24x_31x.v;       
+ 
 
     c0024_0031.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b24x_31x.v), c0024_0031.v);
     c0124_0131.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b24x_31x.v), c0124_0131.v);
