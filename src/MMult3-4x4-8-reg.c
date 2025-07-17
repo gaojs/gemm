@@ -10,8 +10,8 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
                                     double *b, int ldb,
                                     double *c, int ldc )
 {
-  for (int j=0; j<n; j+=4 ){ /* Loop over the rows of C */
-    for (int i=0; i<m; i+=4 ){ /* Loop over the columns of C, unrolled by 4 */
+  for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */
+    for (int j=0; j<n; j+=4 ){ /* Loop over the columns of C, unrolled by 4 */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
 	   one routine (four inner products) */
       AddDot4x4( k, &A( i,0 ), lda, &B( 0,j ), ldb, &C( i,j ), ldc );
@@ -58,7 +58,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
        b_p0_reg, b_p1_reg, b_p2_reg, b_p3_reg;
 
   double 
-    /* Point to the current elements in the four columns of B */
+    /* Point to the current elements in the four columns of A */
     *a_0p_pntr, *a_1p_pntr, *a_2p_pntr, *a_3p_pntr; 
 
   a_0p_pntr = &A( 0, 0 );

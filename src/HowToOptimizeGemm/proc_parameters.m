@@ -19,4 +19,4 @@ nprocessors = 1;
 % the peak clock rate...
 % 注意：一些处理器具有“涡轮增压”（turbo boost）模式，可以提高峰值时钟速率。
 
-GHz_of_processor = 2.6;
+GHz_of_processor = 3.2;
