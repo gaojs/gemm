@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h> 
 
 #include "parameters.h"
 
@@ -9,6 +10,21 @@ void copy_matrix(int, int, double *, int, double *, int );
 void random_matrix(int, int, double *, int);
 double compare_matrices( int, int, double *, int, double *, int );
 double dclock();
+
+// 对齐内存分配函数（64字节对齐）
+static double* aligned_malloc(size_t elements) {
+    // AVX512需要64字节对齐，分配时按64字节边界对齐
+    double* ptr = (double*)aligned_alloc(64, elements * sizeof(double));
+    if (ptr == NULL) {
+        fprintf(stderr, "内存分配失败\n");
+        exit(EXIT_FAILURE);
+    }
+    // 验证对齐（调试用，可删除）
+    if (((uintptr_t)ptr % 64) != 0) {
+        fprintf(stderr, "警告：内存未按64字节对齐\n");
+    }
+    return ptr;
+}
 
 int main()
 {
@@ -26,14 +42,13 @@ int main()
     ldb = ( LDB == -1 ? k : LDB );
     ldc = ( LDC == -1 ? m : LDC );
 
-    /* Allocate space for the matrices */
-    /* Note: I create an extra column in A to make sure that
-       prefetching beyond the matrix does not cause a segfault */
-    a = ( double * ) malloc( lda * (k+1) * sizeof( double ) );  
-    b = ( double * ) malloc( ldb * n * sizeof( double ) );
-    c = ( double * ) malloc( ldc * n * sizeof( double ) );
-    c_old = ( double * ) malloc( ldc * n * sizeof( double ) );
-    c_ref = ( double * ) malloc( ldc * n * sizeof( double ) );
+        /* 分配对齐的矩阵内存 */
+        /* 注意：A多分配一列，避免预取越界导致段错误 */
+        a = aligned_malloc( lda * (k + 1) ); // 64字节对齐
+        b = aligned_malloc( ldb * n );
+        c = aligned_malloc( ldc * n );
+        c_old = aligned_malloc( ldc * n );
+        c_ref = aligned_malloc( ldc * n );
 
     /* Generate random matrices A, B, c_old */
     random_matrix( m, k, a, lda );

@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 /* Create macros so that the matrices are stored in row-major order */
 #define A(i,j) a[ (i)*lda + (j) ]
 #define B(i,j) b[ (i)*ldb + (j) ]
@@ -11,7 +13,7 @@
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
 /* Routine for computing C = A * B + C */
-void AddDot16x4( int, double *, int, double *, int, double *, int );
+void AddDot4x16( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc );
 void InnerKernel( int m, int n, int k, double *a, int lda, 
     double *b, int ldb, double *c, int ldc, int first_time );
 void PackMatrixA( int, double *, int, double * );
@@ -35,19 +37,33 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *b, int ldb,
                                        double *c, int ldc, int first_time )
 {
-  static double packedA[ ma * kc ];
-  double packedB[ k * n ];
+  static double *packedA = NULL; // 静态指针，动态分配
+  static int max_packedA_size = 0;
+  // 动态分配64字节对齐的packedB（直接用aligned_alloc，不封装函数）
+
+  // 初始化packedA（首次调用或需要扩容时）
+  if (first_time) {
+    int required_size = m * k * sizeof(double);
+    if (packedA == NULL || required_size > max_packedA_size) {
+      if (packedA != NULL) free(packedA); // 释放旧内存
+      packedA = (double*)aligned_alloc(64, required_size);  // 64字节对齐
+      max_packedA_size = required_size;
+    }
+  }
+
+  double *packedB = (double*)aligned_alloc(64, k * n * sizeof(double));
   for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */  
     if(first_time)
       PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
     for (int j=0; j<n; j+=16 ){ /* Loop over the columns of C*/
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	 one routine (four inner products) */
+	   one routine (four inner products) */
       if(i==0)
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot16x4( k, &packedA[ i*k ], k , &packedB[j*k], 16, &C( i,j ), ldc );
+        PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot4x16( k, &packedA[ i*k ], k , &packedB[j*k], 16, &C( i,j ), ldc );
     }
   }
+  free(packedB);  // 释放packedB
 }
 
 void PackMatrixA( int k, double *a, int lda, double *a_to )
@@ -104,7 +120,7 @@ typedef union
 } v4df_t; 
 
 
-void AddDot16x4( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc )
+void AddDot4x16( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc )
 {
 
   __m512d c0_0 = _mm512_setzero_pd();   
@@ -117,8 +133,8 @@ void AddDot16x4( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   __m512d c3_8 = _mm512_setzero_pd(); 
 
   for (int p=0; p<k; p++ ){
-    __m512d b_vec_0 = _mm512_loadu_pd( b );
-    __m512d b_vec_8 = _mm512_loadu_pd( b+8 );
+    __m512d b_vec_0 = _mm512_load_pd( b );
+    __m512d b_vec_8 = _mm512_load_pd( b+8 );
     b+=16;
 
     __m512d a0 = _mm512_broadcastsd_pd(_mm_load_sd(a) );   /* load and duplicate */

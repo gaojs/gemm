@@ -1,6 +1,7 @@
-/* Create macros so that the matrices are stored in column-major order */
-#include <stddef.h>  // 定义NULL
+#include <stddef.h>
 #include <stdlib.h>
+
+/* Create macros so that the matrices are stored in row-major order */
 #define A(i,j) a[ (i)*lda + (j) ]
 #define B(i,j) b[ (i)*ldb + (j) ]
 #define C(i,j) c[ (i)*ldc + (j) ]
@@ -13,37 +14,35 @@
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
 /* Routine for computing C = A * B + C */
-
-void AddDot4x32( int, double *, int, double *, int, double *, int );
+void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc );
+void InnerKernel( int m, int n, int k, double *a, int lda, 
+    double *b, int ldb, double *c, int ldc, int first_time );
 void PackMatrixA( int, double *, int, double * );
 void PackMatrixB( int, double *, int, double * );
-void InnerKernel( int, int, int, double *, int, double *, int, double *, int, int );
-
 
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
                                     double *c, int ldc )
 {
+  /* This time, we compute a m x nc block of C by a call to the InnerKernel */
   for (int p=0; p<k; p+=kc ){
-    int pb = min( k-p, kc );
-    for (int i=0; i<n; i+=nc ){
-      int ib = min( n-i, nc );
-      InnerKernel( m, ib, pb, &A( 0, p), lda, &B(p, i ), ldb, &C( 0,i ), ldc , i == 0 );
+    int kb = min( k-p, kc );
+    for (int j=0; j<n; j+=nc ){
+      int nb = min( n-j, nc );
+      InnerKernel( m, nb, kb, &A( 0, p), lda, &B(p, j ), ldb, &C( 0,j ), ldc, j==0);
     }
   }
 }
-
 
 void InnerKernel( int m, int n, int k, double *a, int lda, 
                                        double *b, int ldb,
                                        double *c, int ldc, int first_time )
 {
-  int i, j;
   static double *packedA = NULL;  // 静态指针，动态分配
   static int max_packedA_size = 0;
   // 动态分配64字节对齐的packedB（直接用aligned_alloc，不封装函数）
 
-    // 初始化packedA（首次调用或需要扩容时）
+  // 初始化packedA（首次调用或需要扩容时）
   if (first_time) {
     int required_size = m * k * sizeof(double);
     if (packedA == NULL || required_size > max_packedA_size) {
@@ -54,29 +53,27 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
   }
 
   double *packedB = (double*)aligned_alloc(64, k * n * sizeof(double));
-  for ( i=0; i<m; i+=4 ){   
-    if(first_time)     /* Loop over the columns of C, unrolled by 4 */
+  for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */
+    if(first_time)
       PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
-    for ( j=0; j<n; j+=32 ){        /* Loop over the rows of C */
+    for (int j=0; j<n; j+=32 ){ /* Loop over the columns of C, unrolled by 4 */
       /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	 one routine (four inner products) */
-      if(i==0)
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot4x32( k, &packedA[ i*k ], k , &packedB[j*k], 32, &C( i,j ), ldc );
+	   one routine (four inner products) */
+      if( i == 0 )
+        PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot4x32( k, &packedA[ i*k ], k , &packedB[ j*k ], 32, &C( i,j ), ldc );
     }
   }
-    free(packedB);  // 释放packedB
+  free(packedB);
 }
-
 
 void PackMatrixA( int k, double *a, int lda, double *a_to )
 {
   double 
     *a_0i_pntr = &A( 0, 0 ), *a_1i_pntr = &A( 1, 0 ),
     *a_2i_pntr = &A( 2, 0 ), *a_3i_pntr = &A( 3, 0 );
-  int j;
 
-  for( j=0; j<k; j++){  /* loop over columns of A */
+  for(int j=0; j<k; j++){ /* loop over columns of A */
     *a_to++ = *a_0i_pntr++;
     *a_to++ = *a_1i_pntr++;
     *a_to++ = *a_2i_pntr++;
@@ -86,13 +83,10 @@ void PackMatrixA( int k, double *a, int lda, double *a_to )
 
 void PackMatrixB( int k, double *b, int ldb, double *b_to )
 {
-  int i,p;
-
-  for( i=0; i<k; i++){  /* loop over rows of B */
-    double 
-      *b_ji_pntr = &B( i , 0 );
+  for(int i=0; i<k; i++){  /* loop over rows of B */
+    double *b_ji_pntr = &B( i , 0 );
     
-    for( p=0; p<32; p++){
+    for(int p=0; p<32; p++){
         *(b_to + p) = *(b_ji_pntr + p);
     }
     b_to += 32;
@@ -158,21 +152,18 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   c0316_0323.v = _mm512_setzero_pd(); 
   c0324_0331.v = _mm512_setzero_pd(); 
 
-  int p;
-  for ( p=0; p<k; p++ ){
+  for (int p=0; p<k; p++ ){
+    ax0.v = _mm512_broadcastsd_pd(_mm_load_sd(a));
+    ax1.v = _mm512_broadcastsd_pd(_mm_load_sd(a+1));
+    ax2.v = _mm512_broadcastsd_pd(_mm_load_sd(a+2));
+    ax3.v = _mm512_broadcastsd_pd(_mm_load_sd(a+3));
+    a+=4;
+
     b0x_7x.v = _mm512_load_pd( (double *) b );
     b8x_15x.v = _mm512_load_pd( (double *) (b+8) );
     b16x_23x.v = _mm512_load_pd( (double *) (b+16) );
     b24x_31x.v = _mm512_load_pd( (double *) (b+24) );
     b+=32;
-
-	  ax0.v = _mm512_broadcastsd_pd(_mm_load_sd(a));
-	  ax1.v = _mm512_broadcastsd_pd(_mm_load_sd(a+1));
-	  ax2.v = _mm512_broadcastsd_pd(_mm_load_sd(a+2));
-	  ax3.v = _mm512_broadcastsd_pd(_mm_load_sd(a+3));
-
-    a+=4;
-
 
     c0000_0007.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b0x_7x.v), c0000_0007.v);
     c0100_0107.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b0x_7x.v), c0100_0107.v);
@@ -189,15 +180,12 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
     c0116_0123.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b16x_23x.v), c0116_0123.v);
     c0216_0223.v = _mm512_add_pd(_mm512_mul_pd(ax2.v, b16x_23x.v), c0216_0223.v);
     c0316_0323.v = _mm512_add_pd(_mm512_mul_pd(ax3.v, b16x_23x.v), c0316_0323.v);
- 
 
     c0024_0031.v = _mm512_add_pd(_mm512_mul_pd(ax0.v, b24x_31x.v), c0024_0031.v);
     c0124_0131.v = _mm512_add_pd(_mm512_mul_pd(ax1.v, b24x_31x.v), c0124_0131.v);
     c0224_0231.v = _mm512_add_pd(_mm512_mul_pd(ax2.v, b24x_31x.v), c0224_0231.v);
     c0324_0331.v = _mm512_add_pd(_mm512_mul_pd(ax3.v, b24x_31x.v), c0324_0331.v);    
-
   }
-
 
   C( 0, 0 ) += c0000_0007.d[0];  C( 0, 1 ) += c0000_0007.d[1];  
   C( 0, 2 ) += c0000_0007.d[2];  C( 0, 3 ) += c0000_0007.d[3];  
@@ -215,7 +203,6 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   C( 0, 26 ) += c0024_0031.d[2];  C( 0, 27 ) += c0024_0031.d[3];  
   C( 0, 28 ) += c0024_0031.d[4];  C( 0, 29 ) += c0024_0031.d[5];  
   C( 0, 30 ) += c0024_0031.d[6];  C( 0, 31 ) += c0024_0031.d[7];  
-
 
   C( 1, 0 ) += c0100_0107.d[0];  C( 1, 1 ) += c0100_0107.d[1];  
   C( 1, 2 ) += c0100_0107.d[2];  C( 1, 3 ) += c0100_0107.d[3];  
@@ -251,7 +238,6 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   C( 2, 28 ) += c0224_0231.d[4];  C( 2, 29 ) += c0224_0231.d[5];  
   C( 2, 30 ) += c0224_0231.d[6];  C( 2, 31 ) += c0224_0231.d[7];  
 
-
   C( 3, 0 ) += c0300_0307.d[0];  C( 3, 1 ) += c0300_0307.d[1];  
   C( 3, 2 ) += c0300_0307.d[2];  C( 3, 3 ) += c0300_0307.d[3];  
   C( 3, 4 ) += c0300_0307.d[4];  C( 3, 5 ) += c0300_0307.d[5];  
@@ -268,5 +254,4 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   C( 3, 26 ) += c0324_0331.d[2];  C( 3, 27 ) += c0324_0331.d[3];  
   C( 3, 28 ) += c0324_0331.d[4];  C( 3, 29 ) += c0324_0331.d[5];  
   C( 3, 30 ) += c0324_0331.d[6];  C( 3, 31 ) += c0324_0331.d[7];  
-
 }
