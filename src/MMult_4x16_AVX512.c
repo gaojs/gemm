@@ -131,8 +131,8 @@ void AddDot16x4( int k, double *a, int lda,  double *b, int ldb, double *c, int 
   __m512d c3_8 = _mm512_setzero_pd(); 
 
   for (int p=0; p<k; p++ ){
-    __m512d b_vec_0 = _mm512_load_pd( b );
-    __m512d b_vec_8 = _mm512_load_pd( b+8 );
+    __m512d b_vec_0 = _mm512_loadu_pd( b );
+    __m512d b_vec_8 = _mm512_loadu_pd( b+8 );
     b+=16;
 
     __m512d a0 = _mm512_broadcastsd_pd(_mm_load_sd(a) );   /* load and duplicate */
