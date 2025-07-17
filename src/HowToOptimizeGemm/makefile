@@ -1,5 +1,5 @@
-OLD  := MMult3-4x4-8-reg
-NEW  := MMult3-4x4-9-rearr
+OLD  := MMult0
+NEW  := MMult-4x32-avx512
 
 #
 # sample makefile
@@ -7,7 +7,7 @@ NEW  := MMult3-4x4-9-rearr
 
 CC         := gcc
 LINKER     := $(CC)
-CFLAGS     := -O2 -Wall -march=native
+CFLAGS     := -O2 -Wall -march=native -mavx512f -g
 LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
