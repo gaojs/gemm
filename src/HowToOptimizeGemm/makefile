@@ -1,5 +1,5 @@
-OLD  := MMult3-4x4-15-packb
-NEW  := MMult3-4x32-avx512
+OLD  := MMult3-4x32-avx512
+NEW  := MMult3-4x4-avx256
 
 #
 # sample makefile
@@ -7,7 +7,7 @@ NEW  := MMult3-4x32-avx512
 
 CC         := gcc
 LINKER     := $(CC)
-CFLAGS     := -O2 -Wall -march=native
+CFLAGS     := -O2 -Wall -march=native -g
 LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
