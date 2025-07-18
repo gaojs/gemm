@@ -8,16 +8,15 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
                                     double *b, int ldb,
                                     double *c, int ldc )
 {
-  for (int i=0; i<m; i++ ){
-    for (int p=0; p<k; p++ ){
-      register double aip = A( i,p );
-      for (int j=0; j<n; j+=4 ){
-        C( i,j+0 ) +=  aip * B( p,j+0 );
-        C( i,j+1 ) +=  aip * B( p,j+1 );
-        C( i,j+2 ) +=  aip * B( p,j+2 );
-        C( i,j+3 ) +=  aip * B( p,j+3 );
+  for (int p=0; p<k; p++ ){ /* Update C( i,j ) with the inner
+      product of the ith row of A and the jth column of B */
+    for (int i=0; i<m; i++ ){ /* Loop over the rows of C */
+      for (int j=0; j<n; j++ ){ /* Loop over the columns of C */
+        C( i,j ) = C( i,j ) +  A( i,p ) * B( p,j );
       }
     }
   }
 }
- 
+
+
+  
