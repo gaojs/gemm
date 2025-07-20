@@ -1,5 +1,5 @@
-OLD  := MMult1Loop
-NEW  := MMult1Unroll
+OLD  := MMult2Block
+NEW  := MMult2Block2
 
 #
 # sample makefile
