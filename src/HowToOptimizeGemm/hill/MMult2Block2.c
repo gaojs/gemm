@@ -51,10 +51,10 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
 {
   for (int i=0; i<m; i+=mc){
     int mb = min( m-i, mc);
-    for (int j=0; j<n; j+=nc){
-      int nb = min( n-j, nc);
-      for (int p=0; p<k; p+=kc){
-        int kb = min( k-p, kc);
+    for (int p=0; p<k; p+=kc){
+      int kb = min( k-p, kc);
+      for (int j=0; j<n; j+=nc){
+        int nb = min( n-j, nc);
         kernel(mb, nb, kb, &A(i, p), lda, &B(p, j), ldb, &C(i,j), ldc);
       }
     }

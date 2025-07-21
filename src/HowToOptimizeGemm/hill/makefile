@@ -1,5 +1,5 @@
-OLD  := MMult2Block
-NEW  := MMult2Block2
+OLD  := MMult2Block2
+NEW  := MMult2Block3
 
 #
 # sample makefile
