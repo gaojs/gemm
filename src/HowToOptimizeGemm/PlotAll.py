@@ -1,3 +1,9 @@
+# 告诉 matplotlib使用 ​​Agg 后端​​，它用于生成图片文件（如 PNG），
+# 完全不需要图形显示系统，因此，就不会报如下的错误了：
+# Authorization required, but no authorization protocol specified
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 
