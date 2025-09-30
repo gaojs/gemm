@@ -1,0 +1,12 @@
+使用说明
+
+一、编译
+将上级目录的代码（比如MMult3-4x32-avx512.c）复制到该目录下，
+修改makefile中的NEW和OLD为MMult3-4x32-avx512，
+执行命令（make），会生成可执行文件（test_MMult.x）。
+
+二、运行
+执行命令（make run），会生成性能结果（output_*.m）。
+
+三、对比
+执行命令（python PlotAll.py），会生成对比图片（cmp_*.png）。
