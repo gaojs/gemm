@@ -5,7 +5,8 @@
 #define B(i,j) b[ (i)*ldb + (j) ]
 #define C(i,j) c[ (i)*ldc + (j) ]
 
-void dot4x4(int k, double *a, int lda, double *b, int ldb,double *c, int ldc)
+void dot4x4_avx256(int k, double *a, int lda,
+    double *b, int ldb,double *c, int ldc)
 {
   __m256d mc0 = _mm256_loadu_pd(&C(0, 0));
   __m256d mc1 = _mm256_loadu_pd(&C(1, 0));
@@ -33,15 +34,15 @@ void kernel( int m, int n, int k, double *a, int lda,
 {
   for (int i=0; i<m; i+=4){
     for (int j=0; j<n; j+=4){
-      dot4x4(k, &A(i,0), lda, &B(0,j), ldb, &C(i,j), ldc);
+      dot4x4_avx256(k, &A(i,0), lda, &B(0,j), ldb, &C(i,j), ldc);
     }
   }  
 }
 
 /* Block sizes */
-#define kc 64
-#define nc 256
-#define mc 256
+#define kc 48
+#define nc 32
+#define mc 32
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
