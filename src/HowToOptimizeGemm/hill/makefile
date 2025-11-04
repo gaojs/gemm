@@ -1,5 +1,5 @@
-OLD  := MMult2Block8x8
-NEW  := MMult2Block8x16
+OLD  := MMult2Block8x16
+NEW  := MMult3-8x8-avx512
 
 #
 # sample makefile
