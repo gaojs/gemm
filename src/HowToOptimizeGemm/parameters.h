@@ -5,7 +5,7 @@ The below parameters set this range of values that p takes on
 以下参数设置了p的取值范围
 */   
 #define PFIRST 128
-#define PLAST  2048
+#define PLAST  1280
 #define PINC   128
 
 /* 
