@@ -85,7 +85,7 @@ fig, ax = plt.subplots()
 ax.plot(old_data[:,0], old_data[:,1], 'bo-.', label='old:' + old.version)
 ax.plot(new_data[:,0], new_data[:,1], 'r-*', label='new:' + new.version)
 
-ax.set(xlabel='m = n = k', ylabel='GFLOPS/sec.',
+ax.set(xlabel='m = n = k', ylabel='GFLOPS',
        title="OLD = {}, NEW = {}".format(old.version, new.version))
 ax.grid()
 ax.legend()
