@@ -2,7 +2,7 @@
 % per clock cycle
 %
 
-nflops_per_cycle = 4;
+nflops_per_cycle = 8;
 
 %
 % Indicate the number of processors being used (in case you are using a
