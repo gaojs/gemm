@@ -10,10 +10,22 @@ void MY_MMult( int m, int n, int k, double *a, int lda,
                                     double *c, int ldc )
 {
   for (int i=0; i<m; i+=1 ){ /* Loop over the rows of C */
-    for (int j=0; j<n; j+=1 ){ /* Loop over the columns of C */
+    for (int j=0; j<n; j+=4 ){ /* Loop over the columns of C, unrolled by 4 */
       /* Update the C( i,j ) with the inner product of the ith row of A
         and the jth column of B */
       AddDot( k, &A( i,0 ), &B( 0,j ), ldb, &C( i,j ) );
+
+      /* Update the C( i,j+1 ) with the inner product of the ith row of A
+        and the (j+1)th column of B */
+      AddDot( k, &A( i,0 ), &B( 0,j+1 ), ldb, &C( i,j+1 ) );
+
+      /* Update the C( i,j+2 ) with the inner product of the ith row of A
+        and the (j+2)th column of B */
+      AddDot( k, &A( i,0 ), &B( 0,j+2 ), ldb, &C( i,j+2 ) );
+
+      /* Update the C( i,j+3 ) with the inner product of the ith row of A
+        and the (j+1)th column of B */
+      AddDot( k, &A( i,0 ), &B( 0,j+3 ), ldb, &C( i,j+3 ) );
     }
   }
 }
