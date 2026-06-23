@@ -30,7 +30,7 @@ hold on
 axis( [ 0 MY_MMult( last,1 ) 0 max_gflops ] );
 
 xlabel( 'm = n = k' );
-ylabel( 'GFLOPS/sec.' );
+ylabel( 'GFLOPS' );
 
 %
 % Read in second data set and plot it.
