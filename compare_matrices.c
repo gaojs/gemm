@@ -1,18 +1,17 @@
-#define A( i, j ) a[ (j)*lda + (i) ]
-#define B( i, j ) b[ (j)*ldb + (i) ]
+#define A( i, j ) a[ (i)*lda + (j) ]
+#define B( i, j ) b[ (i)*ldb + (j) ]
 #define abs( x ) ( (x) < 0.0 ? -(x) : (x) )
 
 double compare_matrices( int m, int n, double *a, int lda, double *b, int ldb )
 {
-  int i, j;
-  double max_diff = 0.0, diff;
+  double max_diff = 0.0, diff = 0.0;
 
-  for ( j=0; j<n; j++ )
-    for ( i=0; i<m; i++ ){
+  for ( int i=0; i<m; i++ ){
+    for ( int j=0; j<n; j++ ) {
       diff = abs( A( i,j ) - B( i,j ) );
-      max_diff = ( diff > max_diff ? diff : max_diff );
     }
-
+    max_diff = ( diff > max_diff ? diff : max_diff );
+  }
   return max_diff;
 }
 

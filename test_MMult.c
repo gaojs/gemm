@@ -1,14 +1,15 @@
 #include <stdio.h>
-// #include <malloc.h>
 #include <stdlib.h>
 
 #include "parameters.h"
 
-void REF_MMult(int, int, int, double *, int, double *, int, double *, int );
-void MY_MMult(int, int, int, double *, int, double *, int, double *, int );
-void copy_matrix(int, int, double *, int, double *, int );
-void random_matrix(int, int, double *, int);
-double compare_matrices( int, int, double *, int, double *, int );
+void REF_MMult( int m, int n, int k, double *a, int lda, 
+                double *b, int ldb, double *c, int ldc );
+void MY_MMult( int m, int n, int k, double *a, int lda, 
+                double *b, int ldb, double *c, int ldc );
+void copy_matrix( int m, int n, double *a, int lda, double *b, int ldb );
+void random_matrix( int m, int n, double *a, int lda );
+double compare_matrices( int m, int n, double *a, int lda, double *b, int ldb );
 
 double dclock();
 
@@ -73,9 +74,9 @@ int main()
       dtime = dclock() - dtime;
 
       if ( rep==0 )
-	dtime_best = dtime;
+        dtime_best = dtime;
       else
-	dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
+        dtime_best = ( dtime < dtime_best ? dtime : dtime_best );
     }
 
     diff = compare_matrices( m, n, c, ldc, cref, ldc );
