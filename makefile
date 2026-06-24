@@ -1,5 +1,5 @@
-OLD  := MMult3_4x4_15
-NEW  := MMult4-4x4-avx2
+OLD  := MMult0
+NEW  := MMult0
 
 #
 # sample makefile
@@ -17,7 +17,7 @@ UTIL       := copy_matrix.o \
               REF_MMult.o \
               print_matrix.o
 
-TEST_OBJS  := test_MMult.o $(NEW).o 
+TEST_OBJS  := test_MMult.o src/$(NEW).o 
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
