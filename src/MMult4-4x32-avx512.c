@@ -10,6 +10,7 @@
 #define nc 64
 #define kc 1024
 #define ma 2048
+#define NR 32
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
@@ -18,7 +19,7 @@ void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int 
 void InnerKernel( int m, int n, int k, double *a, int lda, 
     double *b, int ldb, double *c, int ldc, int first_time );
 void PackMatrixA( int, double *, int, double * );
-void PackMatrixB( int, double *, int, double * );
+void PackMatrixB( int, int, double *, int, double * );
 
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
@@ -38,30 +39,40 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *b, int ldb,
                                        double *c, int ldc, int first_time )
 {
-  static double *packedA = NULL;  // 静态指针，动态分配
+  static double *packedA = NULL;
   static int max_packedA_size = 0;
-  // 动态分配64字节对齐的packedB（直接用aligned_alloc，不封装函数）
 
-  // 初始化packedA（首次调用或需要扩容时）
   if (first_time) {
     int required_size = m * k * sizeof(double);
     if (packedA == NULL || required_size > max_packedA_size) {
-      if (packedA != NULL) free(packedA);  // 释放旧内存
-      packedA = (double*)aligned_alloc(64, required_size);  // 64字节对齐
+      if (packedA != NULL) free(packedA);
+      packedA = (double*)aligned_alloc(64, required_size);
       max_packedA_size = required_size;
     }
   }
 
-  double *packedB = (double*)aligned_alloc(64, k * n * sizeof(double));
-  for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */
+  double *packedB = (double*)aligned_alloc(64, kc * nc * sizeof(double));
+  for (int i=0; i<m; i+=4 ){
     if(first_time)
       PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
-    for (int j=0; j<n; j+=32 ){ /* Loop over the columns of C, unrolled by 4 */
-      /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	   one routine (four inner products) */
+    int j;
+    for (j=0; j + NR <= n; j+=NR ){
       if( i == 0 )
-        PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot4x32( k, &packedA[ i*k ], k , &packedB[ j*k ], 32, &C( i,j ), ldc );
+        PackMatrixB( k, NR, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot4x32( k, &packedA[ i*k ], k , &packedB[ j*k ], NR, &C( i,j ), ldc );
+    }
+    if (j < n) {
+      int remaining = n - j;
+      if(i==0)
+      PackMatrixB( k, remaining, &B( 0, j ), ldb, &packedB[ j*k ] );
+      for (int p=0; p<k; p++) {
+        for (int ii=0; ii<4; ii++) {
+          double a_val = packedA[i*k + p*4 + ii];
+          for (int jj=0; jj<remaining; jj++) {
+            C(i+ii, j+jj) += a_val * packedB[j*k + p*NR + jj];
+          }
+        }
+      }
     }
   }
   free(packedB);
@@ -73,7 +84,7 @@ void PackMatrixA( int k, double *a, int lda, double *a_to )
     *a_0i_pntr = &A( 0, 0 ), *a_1i_pntr = &A( 1, 0 ),
     *a_2i_pntr = &A( 2, 0 ), *a_3i_pntr = &A( 3, 0 );
 
-  for(int j=0; j<k; j++){ /* loop over columns of A */
+  for(int j=0; j<k; j++){
     *a_to++ = *a_0i_pntr++;
     *a_to++ = *a_1i_pntr++;
     *a_to++ = *a_2i_pntr++;
@@ -81,15 +92,18 @@ void PackMatrixA( int k, double *a, int lda, double *a_to )
   }
 }
 
-void PackMatrixB( int k, double *b, int ldb, double *b_to )
+void PackMatrixB( int k, int ncols, double *b, int ldb, double *b_to )
 {
-  for(int i=0; i<k; i++){  /* loop over rows of B */
+  for(int i=0; i<k; i++){
     double *b_ji_pntr = &B( i , 0 );
     
-    for(int p=0; p<32; p++){
+    for(int p=0; p<ncols; p++){
         *(b_to + p) = *(b_ji_pntr + p);
     }
-    b_to += 32;
+    for (int p=ncols; p<NR; p++) {
+      *(b_to + p) = 0.0;
+    }
+    b_to += NR;
   }
 }
 
@@ -103,26 +117,6 @@ typedef union
 
 void AddDot4x32( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc )
 {
-  /* So, this routine computes a 4x4 block of matrix A
-
-           C( 0, 0 ), C( 0, 1 ), C( 0, 2 ), C( 0, 3 ).  
-           C( 1, 0 ), C( 1, 1 ), C( 1, 2 ), C( 1, 3 ).  
-           C( 2, 0 ), C( 2, 1 ), C( 2, 2 ), C( 2, 3 ).  
-           C( 3, 0 ), C( 3, 1 ), C( 3, 2 ), C( 3, 3 ).  
-
-     Notice that this routine is called with c = C( i, j ) in the
-     previous routine, so these are actually the elements 
-
-           C( i  , j ), C( i  , j+1 ), C( i  , j+2 ), C( i  , j+3 ) 
-           C( i+1, j ), C( i+1, j+1 ), C( i+1, j+2 ), C( i+1, j+3 ) 
-           C( i+2, j ), C( i+2, j+1 ), C( i+2, j+2 ), C( i+2, j+3 ) 
-           C( i+3, j ), C( i+3, j+1 ), C( i+3, j+2 ), C( i+3, j+3 ) 
-	  
-     in the original matrix C 
-
-     And now we use vector registers and instructions */
-
-
   v8df_t
     c0000_0007, c0008_0015, c0016_0023, c0024_0031,
     c0100_0107, c0108_0115, c0116_0123, c0124_0131,

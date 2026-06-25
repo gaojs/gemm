@@ -7,21 +7,22 @@
 #define nc 128
 #define kc 256
 #define ma 2048
+#define MR 8
+#define NR 8
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
 /* Routine for computing C = A * B + C */
-void AddDot8x4( int, double *, int, double *, int, double *, int );
+void AddDot8x8( int, double *, int, double *, int, double *, int );
 void InnerKernel( int m, int n, int k, double *a, int lda, 
     double *b, int ldb, double *c, int ldc, int first_time );
-void PackMatrixA( int, double *, int, double * );
-void PackMatrixB( int, double *, int, double * );
+void PackMatrixA( int, int, double *, int, double * );
+void PackMatrixB( int, int, double *, int, double * );
 
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
                                     double *c, int ldc )
 {
-  /* This time, we compute a m x nc block of C by a call to the InnerKernel */
   for (int p=0; p<k; p+=kc ){
     int kb = min( k-p, kc );
     for (int j=0; j<n; j+=nc ){
@@ -36,54 +37,97 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *c, int ldc, int first_time )
 {
   static double packedA[ ma * kc ];
-  double packedB[ k * n ];
-  for (int i=0; i<m; i+=8 ){ /* Loop over the rows of C */  
+  double packedB[ kc * nc ];
+  int i;
+  for (i=0; i + MR <= m; i+=MR ){
     if(first_time)
-      PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
-    for (int j=0; j<n; j+=8 ){ /* Loop over the columns of C*/
-      /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	 one routine (four inner products) */
+      PackMatrixA( k, MR, &A( i, 0 ), lda, &packedA[ i*k ] );
+    int j;
+    for (j=0; j + NR <= n; j+=NR ){
       if(i==0)
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot8x4( k, &packedA[ i*k ], k , &packedB[j*k], 8, &C( i,j ), ldc );
+      PackMatrixB( k, NR, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot8x8( k, &packedA[ i*k ], k , &packedB[j*k], NR, &C( i,j ), ldc );
+    }
+    if (j < n) {
+      int remaining = n - j;
+      if(i==0)
+      PackMatrixB( k, remaining, &B( 0, j ), ldb, &packedB[ j*k ] );
+      for (int p=0; p<k; p++) {
+        for (int ii=0; ii<MR; ii++) {
+          double a_val = packedA[i*k + p*MR + ii];
+          for (int jj=0; jj<remaining; jj++) {
+            C(i+ii, j+jj) += a_val * packedB[j*k + p*NR + jj];
+          }
+        }
+      }
+    }
+  }
+  if (i < m) {
+    int remaining_m = m - i;
+    if(first_time)
+      PackMatrixA( k, remaining_m, &A( i, 0 ), lda, &packedA[ i*k ] );
+    int j;
+    for (j=0; j + NR <= n; j+=NR ){
+      if(i==0)
+      PackMatrixB( k, NR, &B( 0, j ), ldb, &packedB[ j*k ] );
+      for (int p=0; p<k; p++) {
+        for (int ii=0; ii<remaining_m; ii++) {
+          double a_val = packedA[i*k + p*MR + ii];
+          for (int jj=0; jj<NR; jj++) {
+            C(i+ii, j+jj) += a_val * packedB[j*k + p*NR + jj];
+          }
+        }
+      }
+    }
+    if (j < n) {
+      int remaining_n = n - j;
+      if(i==0)
+      PackMatrixB( k, remaining_n, &B( 0, j ), ldb, &packedB[ j*k ] );
+      for (int p=0; p<k; p++) {
+        for (int ii=0; ii<remaining_m; ii++) {
+          double a_val = packedA[i*k + p*MR + ii];
+          for (int jj=0; jj<remaining_n; jj++) {
+            C(i+ii, j+jj) += a_val * packedB[j*k + p*NR + jj];
+          }
+        }
+      }
     }
   }
 }
 
-void PackMatrixA( int k, double *a, int lda, double *a_to )
+void PackMatrixA( int k, int nrows, double *a, int lda, double *a_to )
 {
-  double 
-    *a_0i_pntr = &A( 0, 0 ), *a_1i_pntr = &A( 1, 0 ),
-    *a_2i_pntr = &A( 2, 0 ), *a_3i_pntr = &A( 3, 0 ),
-    *a_4i_pntr = &A( 4, 0 ), *a_5i_pntr = &A( 5, 0 ),
-    *a_6i_pntr = &A( 6, 0 ), *a_7i_pntr = &A( 7, 0 );    
+  double *a_pntrs[8];
+  a_pntrs[0] = &A( 0, 0 );
+  if (nrows > 1) a_pntrs[1] = &A( 1, 0 );
+  if (nrows > 2) a_pntrs[2] = &A( 2, 0 );
+  if (nrows > 3) a_pntrs[3] = &A( 3, 0 );
+  if (nrows > 4) a_pntrs[4] = &A( 4, 0 );
+  if (nrows > 5) a_pntrs[5] = &A( 5, 0 );
+  if (nrows > 6) a_pntrs[6] = &A( 6, 0 );
+  if (nrows > 7) a_pntrs[7] = &A( 7, 0 );
 
-  for(int j=0; j<k; j++){ /* loop over columns of A */
-    *a_to++ = *a_0i_pntr++;
-    *a_to++ = *a_1i_pntr++;
-    *a_to++ = *a_2i_pntr++;
-    *a_to++ = *a_3i_pntr++;
-    *a_to++ = *a_4i_pntr++;
-    *a_to++ = *a_5i_pntr++;
-    *a_to++ = *a_6i_pntr++;
-    *a_to++ = *a_7i_pntr++;
+  for(int j=0; j<k; j++){
+    for (int i=0; i<nrows; i++) {
+      *a_to++ = *a_pntrs[i]++;
+    }
+    for (int i=nrows; i<MR; i++) {
+      *a_to++ = 0.0;
+    }
   }
 }
 
-void PackMatrixB( int k, double *b, int ldb, double *b_to )
+void PackMatrixB( int k, int ncols, double *b, int ldb, double *b_to )
 {
-  for(int i=0; i<k; i++){  /* loop over rows of B */
+  for(int i=0; i<k; i++){
     double *b_ji_pntr = &B( i, 0 );
-
-    *b_to     = *b_ji_pntr;
-    *(b_to+1) = *(b_ji_pntr+1);
-    *(b_to+2) = *(b_ji_pntr+2);
-    *(b_to+3) = *(b_ji_pntr+3);
-    *(b_to+4) = *(b_ji_pntr+4);
-    *(b_to+5) = *(b_ji_pntr+5);
-    *(b_to+6) = *(b_ji_pntr+6);
-    *(b_to+7) = *(b_ji_pntr+7);
-    b_to += 8;
+    for (int p=0; p<ncols; p++) {
+      *(b_to + p) = *(b_ji_pntr + p);
+    }
+    for (int p=ncols; p<NR; p++) {
+      *(b_to + p) = 0.0;
+    }
+    b_to += NR;
   }
 }
 
@@ -102,7 +146,7 @@ typedef union
 } v4df_t; 
 
 
-void AddDot8x4( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc )
+void AddDot8x8( int k, double *a, int lda,  double *b, int ldb, double *c, int ldc )
 {
 
   __m512d c0 = _mm512_setzero_pd();   
@@ -116,17 +160,17 @@ void AddDot8x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
 
   for (int p=0; p<k; p++ ){
     __m512d b_vec = _mm512_loadu_pd( b );
-    b+=8;
+    b+=NR;
 
-    __m512d a0 = _mm512_broadcastsd_pd(_mm_load_sd(a) );   /* load and duplicate */
-    __m512d a1 = _mm512_broadcastsd_pd(_mm_load_sd(a+1) );   /* load and duplicate */
-    __m512d a2 = _mm512_broadcastsd_pd(_mm_load_sd(a+2) );   /* load and duplicate */
-    __m512d a3 = _mm512_broadcastsd_pd(_mm_load_sd(a+3) );   /* load and duplicate */
-    __m512d a4 = _mm512_broadcastsd_pd(_mm_load_sd(a+4) );   /* load and duplicate */
-    __m512d a5 = _mm512_broadcastsd_pd(_mm_load_sd(a+5) );   /* load and duplicate */
-    __m512d a6 = _mm512_broadcastsd_pd(_mm_load_sd(a+6) );   /* load and duplicate */
-    __m512d a7 = _mm512_broadcastsd_pd(_mm_load_sd(a+7) );   /* load and duplicate */
-    a+=8;
+    __m512d a0 = _mm512_broadcastsd_pd(_mm_load_sd(a) );
+    __m512d a1 = _mm512_broadcastsd_pd(_mm_load_sd(a+1) );
+    __m512d a2 = _mm512_broadcastsd_pd(_mm_load_sd(a+2) );
+    __m512d a3 = _mm512_broadcastsd_pd(_mm_load_sd(a+3) );
+    __m512d a4 = _mm512_broadcastsd_pd(_mm_load_sd(a+4) );
+    __m512d a5 = _mm512_broadcastsd_pd(_mm_load_sd(a+5) );
+    __m512d a6 = _mm512_broadcastsd_pd(_mm_load_sd(a+6) );
+    __m512d a7 = _mm512_broadcastsd_pd(_mm_load_sd(a+7) );
+    a+=MR;
 
     c0 = _mm512_fmadd_pd(b_vec, a0, c0);
     c1 = _mm512_fmadd_pd(b_vec, a1, c1);

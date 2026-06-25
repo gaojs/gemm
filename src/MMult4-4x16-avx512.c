@@ -7,6 +7,7 @@
 #define nc 128
 #define kc 256
 #define ma 2048
+#define NR 16
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 
@@ -15,7 +16,7 @@ void AddDot16x4( int, double *, int, double *, int, double *, int );
 void InnerKernel( int m, int n, int k, double *a, int lda, 
     double *b, int ldb, double *c, int ldc, int first_time );
 void PackMatrixA( int, double *, int, double * );
-void PackMatrixB( int, double *, int, double * );
+void PackMatrixB( int, int, double *, int, double * );
 
 void MY_MMult( int m, int n, int k, double *a, int lda, 
                                     double *b, int ldb,
@@ -36,16 +37,30 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *c, int ldc, int first_time )
 {
   static double packedA[ ma * kc ];
-  double packedB[ k * n ];
+  double packedB[ kc * nc ];
   for (int i=0; i<m; i+=4 ){ /* Loop over the rows of C */  
     if(first_time)
       PackMatrixA( k, &A( i, 0 ), lda, &packedA[ i*k ] );
-    for (int j=0; j<n; j+=16 ){ /* Loop over the columns of C*/
-      /* Update C( i,j ), C( i,j+1 ), C( i,j+2 ), and C( i,j+3 ) in
-	 one routine (four inner products) */
+    int j;
+    for (j=0; j + NR <= n; j+=NR ){ /* Loop over the columns of C*/
+      /* Update C( i,j ), C( i,j+1 ), ..., C( i,j+NR-1 ) in
+	 one routine */
       if(i==0)
-      PackMatrixB( k, &B( 0, j ), ldb, &packedB[ j*k ] );
-      AddDot16x4( k, &packedA[ i*k ], k , &packedB[j*k], 16, &C( i,j ), ldc );
+      PackMatrixB( k, NR, &B( 0, j ), ldb, &packedB[ j*k ] );
+      AddDot16x4( k, &packedA[ i*k ], k , &packedB[j*k], NR, &C( i,j ), ldc );
+    }
+    if (j < n) {
+      int remaining = n - j;
+      if(i==0)
+      PackMatrixB( k, remaining, &B( 0, j ), ldb, &packedB[ j*k ] );
+      for (int p=0; p<k; p++) {
+        for (int ii=0; ii<4; ii++) {
+          double a_val = packedA[i*k + p*4 + ii];
+          for (int jj=0; jj<remaining; jj++) {
+            C(i+ii, j+jj) += a_val * packedB[j*k + p*NR + jj];
+          }
+        }
+      }
     }
   }
 }
@@ -64,28 +79,17 @@ void PackMatrixA( int k, double *a, int lda, double *a_to )
   }
 }
 
-void PackMatrixB( int k, double *b, int ldb, double *b_to )
+void PackMatrixB( int k, int ncols, double *b, int ldb, double *b_to )
 {
   for(int i=0; i<k; i++){  /* loop over rows of B */
     double *b_ji_pntr = &B( i, 0 );
-
-    *b_to     = *b_ji_pntr;
-    *(b_to+1) = *(b_ji_pntr+1);
-    *(b_to+2) = *(b_ji_pntr+2);
-    *(b_to+3) = *(b_ji_pntr+3);
-    *(b_to+4) = *(b_ji_pntr+4);
-    *(b_to+5) = *(b_ji_pntr+5);
-    *(b_to+6) = *(b_ji_pntr+6);
-    *(b_to+7) = *(b_ji_pntr+7);
-    *(b_to+8) = *(b_ji_pntr+8);
-    *(b_to+9) = *(b_ji_pntr+9);
-    *(b_to+10) = *(b_ji_pntr+10);
-    *(b_to+11) = *(b_ji_pntr+11);
-    *(b_to+12) = *(b_ji_pntr+12);
-    *(b_to+13) = *(b_ji_pntr+13);
-    *(b_to+14) = *(b_ji_pntr+14);
-    *(b_to+15) = *(b_ji_pntr+15);
-    b_to += 16;
+    for (int p=0; p<ncols; p++) {
+      *(b_to + p) = *(b_ji_pntr + p);
+    }
+    for (int p=ncols; p<NR; p++) {
+      *(b_to + p) = 0.0;
+    }
+    b_to += NR;
   }
 }
 
