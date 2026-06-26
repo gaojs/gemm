@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-nflops_per_cycle = 8
+nflops_per_cycle = 16
 nprocessors = 1
 GHz_of_processor = 3.2
 
