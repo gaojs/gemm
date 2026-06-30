@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-IMAGES_DIR="/home/hill/gemm/images"
-BASE_DIR="/home/hill/gemm/images"
+IMAGES_DIR="./images"
+BASE_DIR="./images"
 
 mkdir -p "$IMAGES_DIR"
 
@@ -45,7 +45,7 @@ for ((i=0; i<${#VERSIONS[@]}-1; i++)); do
     echo ""
     echo "Comparing: $ver1 vs $ver2"
     
-    python3 /home/hill/gemm/PlotAll.py "$file1" "$file2" "${IMAGES_DIR}/compare_${ver1}_${ver2}.png"
+    python3 ./PlotAll.py "$file1" "$file2" "${IMAGES_DIR}/compare_${ver1}_${ver2}.png"
     
     echo "Saved: compare_${ver1}_${ver2}.png"
 done

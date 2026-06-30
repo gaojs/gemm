@@ -2,7 +2,7 @@
 set -e
 
 BASELINE="MMult0"
-IMAGES_DIR="/home/hill/gemm/images"
+IMAGES_DIR="./images"
 
 mkdir -p "$IMAGES_DIR"
 
