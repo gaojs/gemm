@@ -7,31 +7,41 @@ IMAGES_DIR="/home/hill/gemm/images"
 mkdir -p "$IMAGES_DIR"
 
 VERSIONS_SSE=(
-    "MMult1"
-    "MMult2_1x4"
-    "MMult2_1x4_3"
-    "MMult2_1x4_4"
-    "MMult2_1x4_5"
-    "MMult2_1x4_6"
-    "MMult2_1x4_7"
-    "MMult2_1x4_8"
-    "MMult3_4x4_3"
-    "MMult3_4x4_4"
-    "MMult3_4x4_5"
-    "MMult3_4x4_6"
-    "MMult3_4x4_7"
-    "MMult3_4x4_8"
-    "MMult3_4x4_9"
-    "MMult3_4x4_10"
-    "MMult3_4x4_11"
-    "MMult3_4x4_12"
-    "MMult3_4x4_13"
-    "MMult3_4x4_14"
-    "MMult3_4x4_15"
+    "MMult1-fn"
+    "MMult2-1x4-2"
+    "MMult2-1x4-3-fn"
+    "MMult2-1x4-4-inline"
+    "MMult2-1x4-5-merge"
+    "MMult2-1x4-6-reg"
+    "MMult2-1x4-7-ptr"
+    "MMult2-1x4-8-unroll"
+    "MMult3-4x4-3-fn"
+    "MMult3-4x4-4-inline"
+    "MMult3-4x4-5-merge"
+    "MMult3-4x4-6-reg"
+    "MMult3-4x4-7-ptr"
+    "MMult3-4x4-8-reg"
+    "MMult3-4x4-9-rearr"
+    "MMult3-4x4-10-avx"
+    "MMult3-4x4-11-block"
+    "MMult3-4x4-12-packa"
+    "MMult3-4x4-13-packa"
+    "MMult3-4x4-14-packb"
+    "MMult3-4x4-15-packb"
 )
 
 VERSIONS_AVX2=(
     "MMult4-4x4-avx2"
+    "MMult4-4x8-avx2"
+)
+
+VERSIONS_AVX512=(
+    "MMult4-4x8-avx512"
+    "MMult4-8x8-avx512"
+    "MMult4-4x16-avx512"
+    "MMult4-4x16-avx512a"
+    "MMult4-4x32-avx512"
+    "MMult4-4x32-avx512-nc128"
 )
 
 echo "========================================"
@@ -68,6 +78,21 @@ for ver in "${VERSIONS_AVX2[@]}"; do
     echo "  Testing: $ver (AVX2)"
     echo "========================================"
     make OLD=$BASELINE NEW="$ver" CFLAGS="-O2 -Wall -mavx2 -mfma" run
+    cp "output_${ver}.m" "$IMAGES_DIR/"
+    python3 PlotAll.py
+    png_file="compare_${BASELINE}_${ver}.png"
+    if [ -f "$png_file" ]; then
+        cp "$png_file" "$IMAGES_DIR/"
+        echo "Saved: $IMAGES_DIR/$png_file"
+    fi
+done
+
+for ver in "${VERSIONS_AVX512[@]}"; do
+    echo ""
+    echo "========================================"
+    echo "  Testing: $ver (AVX-512)"
+    echo "========================================"
+    make OLD=$BASELINE NEW="$ver" CFLAGS="-O2 -Wall -mavx512f -mavx512dq -mfma" run
     cp "output_${ver}.m" "$IMAGES_DIR/"
     python3 PlotAll.py
     png_file="compare_${BASELINE}_${ver}.png"

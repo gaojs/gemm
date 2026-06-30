@@ -35,8 +35,8 @@ int main()
     a = ( double * ) malloc( lda * (k+1) * sizeof( double ) );  
     b = ( double * ) malloc( ldb * n * sizeof( double ) );
     c = ( double * ) malloc( ldc * n * sizeof( double ) );
-    cold = ( double * ) malloc( ldc * n * sizeof( double ) );
-    cref = ( double * ) malloc( ldc * n * sizeof( double ) );
+    c_old = ( double * ) malloc( ldc * n * sizeof( double ) );
+    c_ref = ( double * ) malloc( ldc * n * sizeof( double ) );
 
     /* Generate random matrices A, B, c_old */
     random_matrix( m, k, a, lda );
