@@ -7,7 +7,7 @@ NEW  := MMult4-4x32-avx512
 
 CC         := gcc
 LINKER     := $(CC)
-CFLAGS     := -O2 -Wall -msse3
+CFLAGS     := -O2 -Wall -march=native -g
 LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
