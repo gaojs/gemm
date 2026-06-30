@@ -37,11 +37,15 @@ VERSIONS_AVX2=(
 
 VERSIONS_AVX512=(
     "MMult4-4x8-avx512"
-    "MMult4-8x8-avx512"
     "MMult4-4x16-avx512"
     "MMult4-4x16-avx512a"
     "MMult4-4x32-avx512"
     "MMult4-4x32-avx512-nc128"
+    "MMult4-8x8-avx512"
+    "MMult4-8x16-avx512"
+    "MMult4-8x24-avx512"
+    "MMult4-9x16-avx512"
+    "MMult4-10x16-avx512"
 )
 
 echo "========================================"

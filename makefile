@@ -1,5 +1,5 @@
 OLD  := MMult0
-NEW  := MMult0
+NEW  := MMult4-4x8-avx2
 
 #
 # sample makefile
@@ -37,7 +37,7 @@ run:
 	export OMP_NUM_THREADS=1
 	export GOTO_NUM_THREADS=1
 	echo "version = '$(NEW)';" > output_$(NEW).m
-	./test_MMult.x >> output_$(NEW).m
+	taskset -c 0 ./test_MMult.x >> output_$(NEW).m
 	cp output_$(OLD).m output_old.m
 	cp output_$(NEW).m output_new.m
 
