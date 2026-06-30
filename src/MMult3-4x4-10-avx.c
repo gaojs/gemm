@@ -56,7 +56,7 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     c_20_c_21_vreg, c_22_c_23_vreg,
     c_30_c_31_vreg, c_32_c_33_vreg,
     a_0p_vreg, a_1p_vreg, a_2p_vreg, a_3p_vreg,
-    b_p0_b_p1_vreg, b_p2_a_p3_vreg; 
+    b_p0_b_p1_vreg, b_p2_b_p3_vreg; 
 
   double 
     /* Point to the current elements in the four columns of A */
@@ -83,17 +83,17 @@ void AddDot4x4( int k, double *a, int lda,  double *b, int ldb, double *c, int l
     a_3p_vreg.v = _mm_loaddup_pd( (double *) a_3p_pntr++ );   /* load and duplicate */
 
     b_p0_b_p1_vreg.v = _mm_load_pd( (double *) &B( p, 0 ) );
-    b_p2_a_p3_vreg.v = _mm_load_pd( (double *) &B( p, 2 ) );
+    b_p2_b_p3_vreg.v = _mm_load_pd( (double *) &B( p, 2 ) );
     /* First row and second rows */
     c_00_c_01_vreg.v += a_0p_vreg.v * b_p0_b_p1_vreg.v;
-    c_02_c_03_vreg.v += a_0p_vreg.v * b_p2_a_p3_vreg.v;
+    c_02_c_03_vreg.v += a_0p_vreg.v * b_p2_b_p3_vreg.v;
     c_10_c_11_vreg.v += a_1p_vreg.v * b_p0_b_p1_vreg.v;
-    c_12_c_13_vreg.v += a_1p_vreg.v * b_p2_a_p3_vreg.v;
+    c_12_c_13_vreg.v += a_1p_vreg.v * b_p2_b_p3_vreg.v;
     /* Third and fourth rows */
     c_20_c_21_vreg.v += a_2p_vreg.v * b_p0_b_p1_vreg.v;
-    c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_a_p3_vreg.v;
+    c_22_c_23_vreg.v += a_2p_vreg.v * b_p2_b_p3_vreg.v;
     c_30_c_31_vreg.v += a_3p_vreg.v * b_p0_b_p1_vreg.v;
-    c_32_c_33_vreg.v += a_3p_vreg.v * b_p2_a_p3_vreg.v;
+    c_32_c_33_vreg.v += a_3p_vreg.v * b_p2_b_p3_vreg.v;
   }
 
   C( 0, 0 ) += c_00_c_01_vreg.d[0];  C( 0, 1 ) += c_00_c_01_vreg.d[1];  

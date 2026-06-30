@@ -10,7 +10,6 @@
 #define nc 64
 #define kc 1024
 #define ma 2048
-#define NR 32
 
 #define min( i, j ) ( (i)<(j) ? (i): (j) )
 

@@ -38,16 +38,16 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
                                        double *b, int ldb,
                                        double *c, int ldc, int first_time )
 {
-  static double *packedA = NULL; // ï¿½ï¿½Ì¬Ö¸ï¿½ë£¬ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
+  static double *packedA = NULL; // ¾²Ì¬Ö¸Õë£¬¶¯Ì¬·ÖÅä
   static int max_packedA_size = 0;
-  // ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½64ï¿½Ö½Ú¶ï¿½ï¿½ï¿½ï¿½packedBï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½aligned_allocï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  // ¶¯Ì¬·ÖÅä64×Ö½Ú¶ÔÆëµÄpackedB£¨Ö±½ÓÓÃaligned_alloc£¬²»·â×°º¯Êý£©
 
-  // ï¿½ï¿½Ê¼ï¿½ï¿½packedAï¿½ï¿½ï¿½×´Îµï¿½ï¿½Ã»ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+  // ³õÊ¼»¯packedA£¨Ê×´Îµ÷ÓÃ»òÐèÒªÀ©ÈÝÊ±£©
   if (first_time) {
     int required_size = m * k * sizeof(double);
     if (packedA == NULL || required_size > max_packedA_size) {
-      if (packedA != NULL) free(packedA); // ï¿½Í·Å¾ï¿½ï¿½Ú´ï¿½
-      packedA = (double*)aligned_alloc(64, required_size);  // 64ï¿½Ö½Ú¶ï¿½ï¿½ï¿½
+      if (packedA != NULL) free(packedA); // ÊÍ·Å¾ÉÄÚ´æ
+      packedA = (double*)aligned_alloc(64, required_size);  // 64×Ö½Ú¶ÔÆë
       max_packedA_size = required_size;
     }
   }
@@ -78,7 +78,7 @@ void InnerKernel( int m, int n, int k, double *a, int lda,
       }
     }
   }
-  free(packedB);  // ï¿½Í·ï¿½packedB
+  free(packedB);  // ÊÍ·ÅpackedB
 }
 
 void PackMatrixA( int k, double *a, int lda, double *a_to )
