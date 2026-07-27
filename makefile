@@ -1,5 +1,5 @@
 OLD  := MMult4-4x8-avx2
-NEW  := MMult4-4x8-avx512-tiling
+NEW  := MMult4-4x8-avx2
 
 #
 # sample makefile
