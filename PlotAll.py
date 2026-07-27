@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-nflops_per_cycle = 16
+nflops_per_cycle = 32
 nprocessors = 1
-GHz_of_processor = 3.2
+GHz_of_processor = 3.9
 
 
 class Parser:
