@@ -147,7 +147,7 @@ static void run_mode(const char *name, int mode, cublasHandle_t handle) {
                                 : time_kernel(mode, p, p, p, da, db, dc);
     CUDA_CHECK(cudaMemcpy(out, dc, na * sizeof(double), cudaMemcpyDeviceToHost));
     double gflops = 2.0 * p * p * p / seconds * 1.0e-9;
-    printf("%d %le %le\\n", p, gflops, max_diff(ref, out, (int)na));
+    printf("%d %le %le\n", p, gflops, max_diff(ref, out, (int)na));
     fflush(stdout);
     CUDA_CHECK(cudaFree(da)); CUDA_CHECK(cudaFree(db)); CUDA_CHECK(cudaFree(dc));
     free(a); free(b); free(ref); free(out);
