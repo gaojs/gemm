@@ -1,0 +1,698 @@
+========================================
+  Environment: AMD EPYC 7H12 (AVX2 only)
+  Theoretical peak: 52.8 GFLOPS (single core)
+  Results directory: ./ae7
+  Resume mode: ON (skip done)
+========================================
+  [SKIP] MMult0 (already done: ./ae7/output_MMult0.m)
+  [SKIP] MMult1-fn (already done: ./ae7/output_MMult1-fn.m)
+  [SKIP] MMult2-1x4-2 (already done: ./ae7/output_MMult2-1x4-2.m)
+  [SKIP] MMult2-1x4-3-fn (already done: ./ae7/output_MMult2-1x4-3-fn.m)
+
+========================================
+  Testing: MMult2-1x4-4-inline
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult2-1x4-4-inline.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult2-1x4-4-inline';" > output_MMult2-1x4-4-inline.m
+taskset -c 0 ./test_MMult.x >> output_MMult2-1x4-4-inline.m
+cp output_MMult0.m output_old.m
+cp output_MMult2-1x4-4-inline.m output_new.m
+  [DONE] MMult2-1x4-4-inline
+
+========================================
+  Testing: MMult2-1x4-5-merge
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult2-1x4-5-merge.c -o src/MMult2-1x4-5-merge.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult2-1x4-5-merge.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult2-1x4-5-merge';" > output_MMult2-1x4-5-merge.m
+taskset -c 0 ./test_MMult.x >> output_MMult2-1x4-5-merge.m
+cp output_MMult0.m output_old.m
+cp output_MMult2-1x4-5-merge.m output_new.m
+  [DONE] MMult2-1x4-5-merge
+
+========================================
+  Testing: MMult2-1x4-6-reg
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult2-1x4-6-reg.c -o src/MMult2-1x4-6-reg.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult2-1x4-6-reg.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult2-1x4-6-reg';" > output_MMult2-1x4-6-reg.m
+taskset -c 0 ./test_MMult.x >> output_MMult2-1x4-6-reg.m
+cp output_MMult0.m output_old.m
+cp output_MMult2-1x4-6-reg.m output_new.m
+  [DONE] MMult2-1x4-6-reg
+
+========================================
+  Testing: MMult2-1x4-7-ptr
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult2-1x4-7-ptr.c -o src/MMult2-1x4-7-ptr.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult2-1x4-7-ptr.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult2-1x4-7-ptr';" > output_MMult2-1x4-7-ptr.m
+taskset -c 0 ./test_MMult.x >> output_MMult2-1x4-7-ptr.m
+cp output_MMult0.m output_old.m
+cp output_MMult2-1x4-7-ptr.m output_new.m
+  [DONE] MMult2-1x4-7-ptr
+
+========================================
+  Testing: MMult2-1x4-8-unroll
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult2-1x4-8-unroll.c -o src/MMult2-1x4-8-unroll.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult2-1x4-8-unroll.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult2-1x4-8-unroll';" > output_MMult2-1x4-8-unroll.m
+taskset -c 0 ./test_MMult.x >> output_MMult2-1x4-8-unroll.m
+cp output_MMult0.m output_old.m
+cp output_MMult2-1x4-8-unroll.m output_new.m
+  [DONE] MMult2-1x4-8-unroll
+
+========================================
+  Testing: MMult3-4x4-3-fn
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-3-fn.c -o src/MMult3-4x4-3-fn.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-3-fn.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-3-fn';" > output_MMult3-4x4-3-fn.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-3-fn.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-3-fn.m output_new.m
+  [DONE] MMult3-4x4-3-fn
+
+========================================
+  Testing: MMult3-4x4-4-inline
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-4-inline.c -o src/MMult3-4x4-4-inline.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-4-inline.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-4-inline';" > output_MMult3-4x4-4-inline.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-4-inline.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-4-inline.m output_new.m
+  [DONE] MMult3-4x4-4-inline
+
+========================================
+  Testing: MMult3-4x4-5-merge
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-5-merge.c -o src/MMult3-4x4-5-merge.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-5-merge.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-5-merge';" > output_MMult3-4x4-5-merge.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-5-merge.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-5-merge.m output_new.m
+  [DONE] MMult3-4x4-5-merge
+
+========================================
+  Testing: MMult3-4x4-6-reg
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-6-reg.c -o src/MMult3-4x4-6-reg.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-6-reg.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-6-reg';" > output_MMult3-4x4-6-reg.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-6-reg.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-6-reg.m output_new.m
+  [DONE] MMult3-4x4-6-reg
+
+========================================
+  Testing: MMult3-4x4-7-ptr
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-7-ptr.c -o src/MMult3-4x4-7-ptr.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-7-ptr.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-7-ptr';" > output_MMult3-4x4-7-ptr.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-7-ptr.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-7-ptr.m output_new.m
+  [DONE] MMult3-4x4-7-ptr
+
+========================================
+  Testing: MMult3-4x4-8-reg
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-8-reg.c -o src/MMult3-4x4-8-reg.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-8-reg.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-8-reg';" > output_MMult3-4x4-8-reg.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-8-reg.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-8-reg.m output_new.m
+  [DONE] MMult3-4x4-8-reg
+
+========================================
+  Testing: MMult3-4x4-9-rearr
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-9-rearr.c -o src/MMult3-4x4-9-rearr.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-9-rearr.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-9-rearr';" > output_MMult3-4x4-9-rearr.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-9-rearr.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-9-rearr.m output_new.m
+  [DONE] MMult3-4x4-9-rearr
+
+========================================
+  Testing: MMult3-4x4-10-avx
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-10-avx.c -o src/MMult3-4x4-10-avx.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-10-avx.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-10-avx';" > output_MMult3-4x4-10-avx.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-10-avx.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-10-avx.m output_new.m
+  [DONE] MMult3-4x4-10-avx
+
+========================================
+  Testing: MMult3-4x4-11-block
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-11-block.c -o src/MMult3-4x4-11-block.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-11-block.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-11-block';" > output_MMult3-4x4-11-block.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-11-block.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-11-block.m output_new.m
+  [DONE] MMult3-4x4-11-block
+
+========================================
+  Testing: MMult3-4x4-12-packa
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-12-packa.c -o src/MMult3-4x4-12-packa.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-12-packa.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-12-packa';" > output_MMult3-4x4-12-packa.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-12-packa.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-12-packa.m output_new.m
+  [DONE] MMult3-4x4-12-packa
+
+========================================
+  Testing: MMult3-4x4-13-packa
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-13-packa.c -o src/MMult3-4x4-13-packa.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-13-packa.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-13-packa';" > output_MMult3-4x4-13-packa.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-13-packa.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-13-packa.m output_new.m
+  [DONE] MMult3-4x4-13-packa
+
+========================================
+  Testing: MMult3-4x4-14-packb
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-14-packb.c -o src/MMult3-4x4-14-packb.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-14-packb.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-14-packb';" > output_MMult3-4x4-14-packb.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-14-packb.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-14-packb.m output_new.m
+  [DONE] MMult3-4x4-14-packb
+
+========================================
+  Testing: MMult3-4x4-15-packb
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -march=native -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -march=native -g -c src/MMult3-4x4-15-packb.c -o src/MMult3-4x4-15-packb.o
+gcc -O2 -Wall -march=native -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -march=native -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -march=native -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -march=native -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -march=native -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -march=native -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult3-4x4-15-packb.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult3-4x4-15-packb';" > output_MMult3-4x4-15-packb.m
+taskset -c 0 ./test_MMult.x >> output_MMult3-4x4-15-packb.m
+cp output_MMult0.m output_old.m
+cp output_MMult3-4x4-15-packb.m output_new.m
+  [DONE] MMult3-4x4-15-packb
+
+========================================
+  Testing: MMult4-4x4-avx2
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -mavx2 -mfma -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -mavx2 -mfma -g -c src/MMult4-4x4-avx2.c -o src/MMult4-4x4-avx2.o
+gcc -O2 -Wall -mavx2 -mfma -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -mavx2 -mfma -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -mavx2 -mfma -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -mavx2 -mfma -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -mavx2 -mfma -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -mavx2 -mfma -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult4-4x4-avx2.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult4-4x4-avx2';" > output_MMult4-4x4-avx2.m
+taskset -c 0 ./test_MMult.x >> output_MMult4-4x4-avx2.m
+cp output_MMult0.m output_old.m
+cp output_MMult4-4x4-avx2.m output_new.m
+  [DONE] MMult4-4x4-avx2
+
+========================================
+  Testing: MMult4-4x8-avx2
+========================================
+make all
+make[1]: Entering directory '/home/hill/gemm'
+make clean;
+make[2]: Entering directory '/home/hill/gemm'
+rm -f *.o *~ core *.x
+make[2]: Leaving directory '/home/hill/gemm'
+make test_MMult.x
+make[2]: Entering directory '/home/hill/gemm'
+gcc -O2 -Wall -mavx2 -mfma -g -c test_MMult.c -o test_MMult.o
+gcc -O2 -Wall -mavx2 -mfma -g -c src/MMult4-4x8-avx2.c -o src/MMult4-4x8-avx2.o
+gcc -O2 -Wall -mavx2 -mfma -g -c copy_matrix.c -o copy_matrix.o
+gcc -O2 -Wall -mavx2 -mfma -g -c compare_matrices.c -o compare_matrices.o
+gcc -O2 -Wall -mavx2 -mfma -g -c random_matrix.c -o random_matrix.o
+gcc -O2 -Wall -mavx2 -mfma -g -c dclock.c -o dclock.o
+gcc -O2 -Wall -mavx2 -mfma -g -c REF_MMult.c -o REF_MMult.o
+gcc -O2 -Wall -mavx2 -mfma -g -c print_matrix.c -o print_matrix.o
+gcc test_MMult.o src/MMult4-4x8-avx2.o  copy_matrix.o compare_matrices.o random_matrix.o dclock.o REF_MMult.o print_matrix.o -lm \
+         -o  test_MMult.x 
+make[2]: Leaving directory '/home/hill/gemm'
+make[1]: Leaving directory '/home/hill/gemm'
+export OMP_NUM_THREADS=1
+export GOTO_NUM_THREADS=1
+echo "version = 'MMult4-4x8-avx2';" > output_MMult4-4x8-avx2.m
+taskset -c 0 ./test_MMult.x >> output_MMult4-4x8-avx2.m
+cp output_MMult0.m output_old.m
+cp output_MMult4-4x8-avx2.m output_new.m
+  [DONE] MMult4-4x8-avx2
+
+========================================
+  Generating AVX2 versions comparison plot
+========================================
+/home/hill/gemm/pylibs/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+  warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+[PlotAll] nflops_per_cycle = 16, nprocessors = 1, GHz_of_processor = 3.3
+[PlotAll] max_gflops = 52.8
+Image saved as: ./ae7/compare_avx2_versions.png
+
+========================================
+  Generating summary: MMult0 vs MMult4-4x8-avx2
+========================================
+/home/hill/gemm/pylibs/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+  warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+[PlotAll] nflops_per_cycle = 16, nprocessors = 1, GHz_of_processor = 3.3
+[PlotAll] max_gflops = 52.8
+Image saved as: ./ae7/compare_baseline_vs_avx2_best.png
+
+========================================
+  Generating progression: MMult1-fn vs MMult4-4x8-avx2
+========================================
+/home/hill/gemm/pylibs/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+  warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+[PlotAll] nflops_per_cycle = 16, nprocessors = 1, GHz_of_processor = 3.3
+[PlotAll] max_gflops = 52.8
+Image saved as: ./ae7/compare_progression_mmult1_to_avx2_best.png
+
+========================================
+  All tests completed!
+  Results saved in: ./ae7
+========================================
+
+Performance data files (.m):
+24
+Comparison plots (.png):
+3
+
+=== Files in ./ae7 ===
+total 200
+drwxrwxr-x  2 hill hill  4096 Sep  7 03:45 .
+drwxrwxr-x 12 hill hill  4096 Sep  7 03:44 ..
+-rw-rw-r--  1 hill hill 31831 Sep  7 03:45 compare_avx2_versions.png
+-rw-rw-r--  1 hill hill 29603 Sep  7 03:45 compare_baseline_vs_avx2_best.png
+-rw-rw-r--  1 hill hill 29765 Sep  7 03:45 compare_progression_mmult1_to_avx2_best.png
+-rw-rw-r--  1 hill hill   660 Sep  7 03:01 output_MMult0.m
+-rw-rw-r--  1 hill hill   663 Sep  7 03:03 output_MMult1-fn.m
+-rw-rw-r--  1 hill hill   666 Sep  7 03:05 output_MMult2-1x4-2.m
+-rw-rw-r--  1 hill hill   669 Sep  7 03:07 output_MMult2-1x4-3-fn.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:27 output_MMult2-1x4-4-inline.m
+-rw-rw-r--  1 hill hill   672 Sep  7 03:28 output_MMult2-1x4-5-merge.m
+-rw-rw-r--  1 hill hill   670 Sep  7 03:29 output_MMult2-1x4-6-reg.m
+-rw-rw-r--  1 hill hill   670 Sep  7 03:30 output_MMult2-1x4-7-ptr.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:31 output_MMult2-1x4-8-unroll.m
+-rw-rw-r--  1 hill hill   671 Sep  7 03:40 output_MMult3-4x4-10-avx.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:41 output_MMult3-4x4-11-block.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:41 output_MMult3-4x4-12-packa.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:42 output_MMult3-4x4-13-packa.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:43 output_MMult3-4x4-14-packb.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:43 output_MMult3-4x4-15-packb.m
+-rw-rw-r--  1 hill hill   669 Sep  7 03:33 output_MMult3-4x4-3-fn.m
+-rw-rw-r--  1 hill hill   673 Sep  7 03:35 output_MMult3-4x4-4-inline.m
+-rw-rw-r--  1 hill hill   672 Sep  7 03:37 output_MMult3-4x4-5-merge.m
+-rw-rw-r--  1 hill hill   670 Sep  7 03:37 output_MMult3-4x4-6-reg.m
+-rw-rw-r--  1 hill hill   670 Sep  7 03:38 output_MMult3-4x4-7-ptr.m
+-rw-rw-r--  1 hill hill   670 Sep  7 03:39 output_MMult3-4x4-8-reg.m
+-rw-rw-r--  1 hill hill   672 Sep  7 03:39 output_MMult3-4x4-9-rearr.m
+-rw-rw-r--  1 hill hill   669 Sep  7 03:44 output_MMult4-4x4-avx2.m
+-rw-rw-r--  1 hill hill   669 Sep  7 03:45 output_MMult4-4x8-avx2.m

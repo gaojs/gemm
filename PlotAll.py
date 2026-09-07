@@ -3,10 +3,19 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+import os
 
-nflops_per_cycle = 32
-nprocessors = 1
-GHz_of_processor = 3.9
+# Support environment variables for different CPU environments:
+#   NFLOPS_PER_CYCLE (default 32, AVX-512 dual-FMA)
+#   NPROCESSORS (default 1)
+#   GHZ_OF_PROCESSOR (default 3.9)
+nflops_per_cycle = int(os.environ.get('NFLOPS_PER_CYCLE', '32'))
+nprocessors = int(os.environ.get('NPROCESSORS', '1'))
+GHz_of_processor = float(os.environ.get('GHZ_OF_PROCESSOR', '3.9'))
+
+print("[PlotAll] nflops_per_cycle = {}, nprocessors = {}, GHz_of_processor = {}".format(
+    nflops_per_cycle, nprocessors, GHz_of_processor))
+print("[PlotAll] max_gflops = {}".format(nflops_per_cycle * nprocessors * GHz_of_processor))
 
 
 class Parser:
