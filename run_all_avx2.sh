@@ -10,9 +10,8 @@
 BASELINE="MMult0"
 RESULTS_DIR="./ae7"
 
-# Python interpreter with matplotlib support (conda python + local pylibs symlinks)
-export PYTHONPATH="/home/hill/gemm/pylibs"
-PYTHON="/opt/conda/bin/python"
+# Python 解释器：项目 .venv（已安装 matplotlib/numpy）
+PYTHON="/home/hill/gemm/.venv/bin/python"
 
 # AMD EPYC 7H12 theoretical peak parameters (AVX2 only)
 #   2 FMA units x 4 double x 2 ops = 16 FLOPs/cycle

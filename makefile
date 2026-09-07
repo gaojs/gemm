@@ -1,5 +1,5 @@
-OLD  := MMult4-4x8-avx2
-NEW  := MMult4-4x32-avx512a
+OLD  := MMult0
+NEW  := MMult0
 
 #
 # sample makefile
