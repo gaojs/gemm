@@ -34,10 +34,15 @@
 
 数据文件：[A100 原始结果](../fig-gpu-a100/gpu_results.m) 与 [4090 D 原始结果](../fig-gpu-4090/gpu_results.m)。如果看到“13,948 GFLOPS”，请注意本项目文件中的**n=1024 是 13,498.44 GFLOPS**；所有已测点中最高为 **14,088.57 GFLOPS**，没有 13,948 GFLOPS 这一记录。
 
-## 为什么 cuBLAS 的差距比手写 kernel 大？
+## 为什么 A100 上 cuBLAS 一骑绝尘，而 4090 D 上不是？
 
-1. **精度和硬件设计不同。** A100 提供 9.7 TFLOPS 普通 FP64 和 19.5 TFLOPS FP64 Tensor Core 标称能力；4090 D 对应普通 FP64 推算仅约 1.15 TFLOPS。其 74 TFLOPS 是 Shader/近似单精度指标，不能用于 DGEMM。A100 的 13.50 TFLOPS 已高于其普通 FP64 标称 9.7 TFLOPS，与利用加速路径相符，但**仅凭结果不能证实具体使用了 FP64 Tensor Core**，需要查看 cuBLAS 实际 kernel 和 Nsight 指令指标。
-2. **同一库在两台卡上会选择不同的实现。** `cublasDgemm` 内部 kernel 和配置随架构、尺寸、库版本变化；本项目并未固定内部算法。4090 D 的 902 GFLOPS 低于估算的约 1.15 TFLOPS FP64 峰值，但不意味着 cuBLAS 有错误：算法/访存/尺寸/时钟/测试噪声都可能影响数值，原因需要 profiler 实证。
-3. **本项目矩阵规模不大。** n 从 64 到 1280；GPU kernel/库选择与发射开销相对于计算的比例，以及缓存驻留状况都可能影响名次。五次计时且未做多轮统计；这些数据不应被解读成两张卡在所有尺寸或所有软件版本下的绝对极限。
+这组测试是 **FP64（`double`）DGEMM**，不是 FP32/TF32。A100 面向 HPC，具有强大的 FP64 计算能力与 FP64 Tensor Core；GeForce RTX 4090 D 面向消费级图形和低精度 AI，其原生 FP64 吞吐相对于 FP32 被大幅限制。4090 D 的 FP32/Tensor Core 宣传峰值**不能**当作 DGEMM 峰值。因此 A100 的 cuBLAS 可以利用硬件/优化路径显著拉开差距；4090 D 上多个实现接近其 FP64 吞吐约束，cuBLAS 的算法选择、访存与 kernel 固定开销可能使其在本项目的小到中等矩阵规模下不占优。A100 的 cuBLAS 是否实际用了 FP64 Tensor Core、4090 D 的具体瓶颈是什么，还需用 profiler 实测证明，不能只根据结果文件断定。
 
-对于 FP32/TF32/FP16、游戏、推理、需要 >24 GB 显存的任务，结论需分别重新测量，不能由这份 FP64 DGEMM 结果外推。要判定为何 A100 cuBLAS 具体快、4090 D cuBLAS 输给手写 kernel，可按 [Nsight 使用说明](Nsight使用说明.md) 在相同尺寸下查 GPU 时间线、实际 kernel、FP64/Tensor 指令、时钟及访存指标。
+| 环境 / n=1024 | cuBLAS DGEMM | 最快的手写版本 | 关系 |
+|---|---:|---:|---:|
+| A100 SXM4 | 13498 GFLOPS | reg-2x2：3918 GFLOPS | cuBLAS 约 3.45 倍 |
+| RTX 4090 D | 902 GFLOPS | reg-2x2：1130 GFLOPS | cuBLAS 约为 0.80 倍 |
+
+A100 原始数据见 [A100 原始结果](../fig-gpu-a100/gpu_results.m)，4090 D 数据见 [4090 D 原始结果](../fig-gpu-4090/gpu_results.m)。4090 D 下 reg-2x2 的最好**单个规模**为 n=1024 的约 1130 GFLOPS，cuBLAS 最好**单个规模**为 n=960 的约 989 GFLOPS；上表固定 n=1024，避免用不同尺寸的峰值相除。
+
+不能把 4090 D 的差异仅归咎于 CUDA 12.0 或驱动：当前数据只能说明**该硬件、软件栈、矩阵规模与算法选择**下的表现；CUDA 版本可能影响算法选择，但并无直接证据说明它是主要原因。基准固定调用 `cublasDgemm`，没有指定特殊的混合精度数学模式；单次测试、GPU 动态频率和数据复用也会影响结果。要确定贡献，按相同编译参数、相同 n、相同计时口径复测，同时记录 `nvidia-smi` 时钟和功耗，并在 [Nsight 使用说明](Nsight使用说明.md) 指导下检查选中的 kernel、FP64/Tensor 指令与实际执行时间。对于 FP32/TF32/FP16、游戏、推理及需要超过 24 GB 显存的任务，应分别测试，不能由此处 FP64 DGEMM 的结论外推。
