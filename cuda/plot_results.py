@@ -1,11 +1,12 @@
 import re
 import sys
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-source = sys.argv[1] if len(sys.argv) > 1 else 'fig-gpu/gpu_results.m'
-out = sys.argv[2] if len(sys.argv) > 2 else 'fig-gpu/gpu_comparison.png'
+source = sys.argv[1] if len(sys.argv) > 1 else '../fig-gpu/gpu_results.m'
+out = sys.argv[2] if len(sys.argv) > 2 else '../fig-gpu/gpu_comparison.png'
 text = open(source).read()
 gpu_match = re.search(r'^# GPU: ([^,]+)', text, re.M)
 gpu_name = gpu_match.group(1) if gpu_match else 'NVIDIA GPU'
@@ -24,7 +25,7 @@ for name, rows in series.items():
     ax.plot(x, y, marker='o', label=name)
 ax.set_xlabel('m = n = k')
 ax.set_ylabel('GFLOPS')
-ax.set_title(f'GPU GEMM on {gpu_name}')
+ax.set_title(f'CPU/GPU GEMM on {gpu_name}')
 ax.grid(True)
 ax.legend()
 fig.tight_layout()

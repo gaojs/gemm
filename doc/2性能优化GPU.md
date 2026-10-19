@@ -1,69 +1,170 @@
-# GPU GEMM 优化复现记录
+# GPU GEMM 优化记录
 
-## 1. 目标与实现
+## 1. 优化目标与基线
 
-本项目使用 `gpu_gemm.cu` 测试双精度矩阵乘法 `C = A × B`，与 CPU 版本分开构建。包含 `cuda-naive`、32×32 共享内存分块 `cuda-tiled-32`、寄存器分块 `cuda-reg-2x2` / `cuda-reg-4x4` / `cuda-reg-4x4-64`，以及 `cublas-dgemm`。测试矩阵规模为 64、128、……、1280；每个版本输出 GFLOPS 和相对 CPU 参考结果的最大绝对误差。
+目标是在保证双精度矩阵乘法 `C = A × B` 正确的前提下，降低计算和数据传输的总耗时，提高端到端 GFLOPS。
 
-## 2. 当前工具链与运行方式
+CPU 基线是 `cuda/gemm_cpu.cu` 中的 `cpu-reference`，采用普通三重循环实现 GEMM。GPU 基线是 `cuda/gemm_naive.cu` 中的 `cuda-naive`：每个线程计算一个输出元素，沿 K 维逐项累加。`cublas-dgemm` 是 cuBLAS 库实现，用作对照，不是 GPU 基线；本项目没有使用 TensorRT。
 
-当前 RTX 4090 D（计算能力 8.9）的普通 Terminal 使用 `/usr/bin/nvcc`（CUDA Toolkit 12.0），不是先前 A100 环境的 `/usr/local/cuda/bin/nvcc`（CUDA Toolkit 13.2）。`nvidia-smi` 显示的 CUDA 13.2 是驱动支持的版本，不能据此推断当前安装了 Toolkit 13.2。当前环境的 `cicc` 位于 `/usr/lib/nvidia-cuda-toolkit/bin/cicc`，由 `nvcc` 自动调用，不需要加入 `PATH`；不能再用旧文档的 `/usr/local/cuda/nvvm/bin/cicc` 路径判断工具链是否完整。
+## 2. 源码组织与性能分析
 
-在**可访问 GPU 的普通 Terminal** 中先确认环境；完成下方项目 `.venv` 准备后，再运行脚本：
+### 源码组织
+
+| 文件 | 作用 |
+| --- | --- |
+| `cuda/common.cu` | CUDA/cuBLAS 错误检查、矩阵生成、误差检查、结果输出和公共计时流程 |
+| `cuda/gemm_cpu.cu` | CPU reference GEMM 实现 |
+| `cuda/gpu_runner.cu` | 主入口，依次运行 CPU、GPU 各版本和 cuBLAS |
+| `cuda/gemm_cublas.cu` | cuBLAS 双精度 GEMM 实现 |
+| `cuda/gemm_naive.cu` | GPU naive 基线 kernel |
+| `cuda/gemm_naive_ilp4.cu`、`cuda/gemm_naive_1x2.cu` | naive kernel 的优化实现 |
+| `cuda/gemm_tiled_32.cu` | 共享内存分块实现 |
+| `cuda/gemm_reg_2x2.cu`、`cuda/gemm_reg_4x4.cu`、`cuda/gemm_reg_4x4_64.cu` | 寄存器分块实现 |
+| `cuda/run_benchmark.sh` | 自动选择架构、编译并运行基准程序 |
+| `cuda/plot_results.py` | 解析已有结果并生成性能曲线 |
+
+Nsight Systems 用于观察 CUDA API、H2D/D2H 数据传输和 GPU kernel 时间线；Nsight Compute 用于分析指定 kernel 的计算、访存和占用率。下文给出可执行命令和结果判读方法。
+
+### Nsight Systems：时间线与数据搬运
+
+先在可访问 GPU 的普通 Terminal 设置驱动库路径并编译带行号信息的 profiling 程序：
 
 ```bash
 cd /home/hill/gemm
-nvcc -V
-nvidia-smi --query-gpu=name,compute_cap --format=csv,noheader
+export LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY_PATH:-}
+nvcc -O3 -std=c++14 -arch=sm_89 -lineinfo cuda/gpu_runner.cu -lcublas -lcudart -o /tmp/gpu_gemm_profile.x
 ```
 
-脚本依据设备名和计算能力选择 `sm_89`（RTX 4090 D）或 `sm_80`（A100），调用当前 `PATH` 中的 `nvcc` 编译，运行后仅使用项目目录下的 `.venv/bin/python` 和 matplotlib 绘图，不依赖其他项目的 Python 环境。当前环境已经在项目 `.venv` 中安装了 matplotlib，无需再安装 `uv`。当前 4090 D 环境中，默认库搜索路径可能加载到旧版 `libcuda.so.1`（535），而 `nvidia-smi` 显示的驱动是 595；直接运行脚本会在 `cudaGetDeviceProperties` 处报 `system has unsupported display driver / cuda driver combination`。普通 Terminal 中已验证：临时将与驱动匹配的 `/usr/lib64` 放在库搜索路径前面，可以成功生成结果和图片。请这样运行（`>` 是 shell 的续行提示符，不要输入）：
+A100 将 `sm_89` 改为 `sm_80`。采集 Nsight Systems 报告并汇总：
+
+```bash
+nsys profile --trace=cuda,cublas --sample=none --cpuctxsw=none \
+  --output=/tmp/gemm_nsys /tmp/gpu_gemm_profile.x 1024
+nsys stats --report cudaapisum --report gpukernsum --report gpumemtimesum \
+  /tmp/gemm_nsys.nsys-rep
+nsys stats --report gputrace /tmp/gemm_nsys.nsys-rep
+```
+
+`gputrace` 用于按启动查看 kernel 和 memcpy 活动；`cudaapisum` 是 CPU 侧 API 耗时，`gpukernsum` 是 GPU kernel 汇总，`gpumemtimesum` 汇总设备拷贝。不要混淆 CPU API 时间与 GPU 执行时间；汇总还混合了 CPU 结果和多个 GPU 版本/尺寸。应结合时间线查看 `cuda-naive` 周围 H2D、kernel、D2H 的耗时构成，判断端到端时间主要花在分配/传输还是计算。该 runner 的 GPU 计时包含分配、拷贝、kernel 和释放，但 nsys 的默认 CUDA trace 不一定将 `cudaMalloc/cudaFree` 展示为与这些同步操作同口径的单一区间；端到端性能数字仍以未挂 profiler 的正式基准为准。可用 `nsys-ui /tmp/gemm_nsys.nsys-rep` 打开报告。
+
+### Nsight Compute：单个 kernel 指标
+
+对 N=1024 的 naive kernel 做基础采样。runner 对每个 GPU 版本先预热、再重复 5 次；`--launch-skip 1` 跳过首次匹配（预热），采集随后第一次正式计时的 naive 启动。该程序只运行 N=1024，因此不会混入其他尺寸：
+
+```bash
+ncu --set basic --kernel-name 'regex:gemm_naive' --launch-skip 1 --launch-count 1 \
+  --export /tmp/gemm_naive_ncu /tmp/gpu_gemm_profile.x 1024
+ncu --import /tmp/gemm_naive_ncu.ncu-rep
+```
+
+若当前 NCU 不支持 `basic`，先用 `ncu --list-sets` 查看可用集合并改用 `default`。需要深入指标时可改用 `--set full`（采集开销和指标数量会增加）。检查报告中的 kernel 名、grid/block 是否对应 N=1024。`--launch-count 1` 只限定采集一个匹配启动；NCU 的 replay 可能重复执行该 kernel。不要用 profiler 运行时输出的 GFLOPS 作性能比较。
+
+分析时依次检查：
+
+1. `SpeedOfLight` / `ComputeWorkloadAnalysis`：计算管线是否接近饱和，FP64 吞吐是否为限制；
+2. `MemoryWorkloadAnalysis`：DRAM、L2 吞吐和缓存命中，判断是否真是带宽受限；
+3. `Occupancy`：寄存器、共享内存是否限制活跃 warps；
+4. `WarpStateStats`：warp 等待来自依赖、访存还是同步；
+5. 对照 SASS/源代码行，确认指标对应的指令与访存行为。
+
+指标提示是待验证线索，不是瓶颈结论。Profiler 会改变时钟、缓存与执行次数；加速比必须来自未挂分析器、同设备同尺寸的重复基准。
+
+## 3. 优化版本
+
+优化 kernel 独立成章，便于后续增删版本；当前版本、源文件和方法如下：
+
+| 输出版本 | 源文件 | 核心方法 | 主要权衡 |
+| --- | --- | --- | --- |
+| `cuda-naive-ilp4` | `cuda/gemm_naive_ilp4.cu` | 四条独立累加链 | 减少累加依赖；改变求和顺序 |
+| `cuda-naive-1x2` | `cuda/gemm_naive_1x2.cu` | 每线程计算相邻两个 C 元素 | 复用 A；减少线程数 |
+| `cuda-tiled-32` | `cuda/gemm_tiled_32.cu` | 32×32 共享内存分块 | 复用 A/B；增加同步和共享内存成本 |
+| `cuda-reg-2x2` | `cuda/gemm_reg_2x2.cu` | 每线程计算 2×2 输出块 | 增加数据复用和指令并行性；消耗更多寄存器 |
+| `cuda-reg-4x4` | `cuda/gemm_reg_4x4.cu` | 每线程计算 4×4 输出块 | 增加数据复用；寄存器压力更高 |
+| `cuda-reg-4x4-64` | `cuda/gemm_reg_4x4_64.cu` | 64×64 输出块，K 方向按 8 分块 | 输出块更大；资源和同步开销可能抵消收益 |
+
+改变累加顺序会带来正常的浮点误差差异，应先确认误差在可接受范围内，再比较性能。
+
+## 4. 测试方法
+
+统一入口为 `cuda/gpu_runner.cu`，由 `cuda/run_benchmark.sh` 编译和执行。默认测试方阵 `N=64,128,…,1280`，也可以指定单个 N（64～1280，且为 64 的倍数）。
+
+### CPU 计时
+
+- 先预热执行 1 次；
+- 再执行 5 次；
+- 使用 5 次平均耗时计算 GFLOPS；
+- 只统计 CPU GEMM，不包含数据生成、结果校验等时间。
+
+### GPU 计时
+
+每个 GPU 版本先预热 1 次，再进行 5 次完整端到端测试并取平均值。每次测试包含：
+
+1. `cudaMalloc` 分配 A、B、C；
+2. A、B 从主机复制到 GPU（H2D）；
+3. 执行 GPU kernel 或 cuBLAS GEMM；
+4. C 从 GPU 复制回主机（D2H）；
+5. `cudaFree` 释放显存。
+
+计算公式为：
+
+```text
+GFLOPS = 2 × N³ / 平均耗时（秒）/ 10⁹
+```
+
+输出格式为：
+
+```text
+N GFLOPS 最大绝对误差
+```
+
+因此，CPU 与 GPU 的结果可以按端到端口径直接比较；GPU 各版本之间也必须使用相同 GPU、相同 N 和相同计时方式比较。
+
+### 运行命令
+
+在可访问 GPU 的普通 Terminal 中执行：
 
 ```bash
 cd /home/hill/gemm
-.venv/bin/python -c "import matplotlib; print(matplotlib.__version__)"
 LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY_PATH:-} \
-  ./gpu_run_benchmark.sh
+  ./cuda/run_benchmark.sh 1024
 ```
 
-该环境变量仅对这一条命令生效，无需升级 CUDA Toolkit；不要把旧版驱动库路径排在 `/usr/lib64` 之前。
-
-如果将来在新环境中重建依赖，可按脚本开头记录的首次安装命令逐条执行：
+不指定 N 时，测试全部规模：
 
 ```bash
-cd /home/hill/gemm
-sudo apt-get install -y python3.12-venv
-python3 -m venv .venv
-.venv/bin/python -m pip install matplotlib
-.venv/bin/python -c "import matplotlib; print(matplotlib.__version__)"
+./cuda/run_benchmark.sh
 ```
 
-这些命令不会由基准脚本自动执行；还需确保 `nvcc`、`nvidia-smi` 和 CUDA/cuBLAS 开发库可用。脚本不支持其他 GPU，并只使用列表中的第一张 GPU；使用多 GPU 环境时，请确认设备选择一致。
+脚本会自动识别 GPU 架构，编译 `cuda/gpu_runner.cu`，并在项目虚拟环境安装 matplotlib 时生成性能图。结果保存在：
 
-| GPU | 编译目标 | 结果目录 |
-|---|---|---|
-| NVIDIA A100 | `sm_80` | `fig-gpu-a100/` |
-| NVIDIA GeForce RTX 4090 D | `sm_89` | `fig-gpu-4090/` |
+- RTX 4090 D：`fig-gpu-4090/gpu_results.m`、`gpu_comparison.png`；
+- A100：`fig-gpu-a100/gpu_results.m`、`gpu_comparison.png`。
 
-每个目录的 `gpu_results.m` 保存六种实现的实测结果，`gpu_comparison.png` 为对比图。脚本运行失败时不会覆盖已有的结果文件；成功执行则会更新当前 GPU 对应的结果与图片。**不要在当前 4090 D 环境运行时把 A100 的历史结果当作新生成的数据。** 若 Trae 命令执行沙箱拦截 `/proc` 或 `/dev/nvidia*`，请在没有该限制的普通 Terminal 中运行；沙箱内能够编译不代表能够执行 GPU benchmark。
-
-## 3. RTX 4090 D 结果的原始生成方式
-
-`fig-gpu-4090/gpu_results.m` 最初是在当前环境的普通 Terminal 中使用以下命令生成的；它不是旧版固定 A100 参数的 `gpu_run_benchmark.sh` 所生成：
+仅根据已有结果重绘图表：
 
 ```bash
-cd /home/hill/gemm
-mkdir -p fig-gpu-4090
-/usr/bin/nvcc -O3 -arch=sm_89 -I/usr/include gpu_gemm.cu \
-  -L/usr/lib/x86_64-linux-gnu -lcublas -lcudart \
-  -o /tmp/gpu_gemm_4090.x
-LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda/targets/x86_64-linux/lib:/usr/lib/x86_64-linux-gnu \
-  /tmp/gpu_gemm_4090.x > fig-gpu-4090/gpu_results.m
+.venv/bin/python cuda/plot_results.py \
+  fig-gpu-4090/gpu_results.m fig-gpu-4090/gpu_comparison.png
 ```
 
-之后使用 `gpu_plot_results.py` 读取结果生成图片。更新后的脚本使用当前工具链编译，目标仍是 `sm_89`、同一个 `gpu_gemm.cu`；在此 4090 D 环境中运行时需按上文指定库搜索路径。由于重新运行会重新测量，不保证 GFLOPS 与原结果逐位相同。
+`cuda/plot_results.py` 只解析结果文件并绘图，不编译、不运行 GPU，也不会重新测量。
 
-## 4. 历史数据和判读
+## 5. N=1024 实测结果
 
-A100 的旧版测试在 CUDA Toolkit 13.2、计算能力 8.0 的环境中进行；原始结果保存在 `fig-gpu-a100/`，不要混同于当前的 4090 D。双精度 cuBLAS 在 A100 上明显领先手写 kernel；在 4090 D 上并非最快。固定 n=1024 时，A100 cuBLAS 为约 13,498 GFLOPS，4090 D cuBLAS 为约 902 GFLOPS。应先核对误差是否在双精度浮点计算的正常范围，再比较相同规模下的性能；不能预设 tiled 必然比 naive 快或 cuBLAS 在每个 GPU 上都是最快。
+以下结果来自 RTX 4090 D 的 [gpu_results.m](../fig-gpu-4090/gpu_results.m)，采用上述端到端计时口径。GFLOPS 越高越好；误差为相对 CPU 参考结果的最大绝对误差。
 
-硬件规格与差异分析见 [GPU 显卡性能规格](GPU显卡性能规格.md)，性能分析步骤见 [Nsight 使用说明](Nsight使用说明.md)。
+| 顺序 | 版本 | GFLOPS | 相对 GPU naive | 最大绝对误差 |
+| ---: | --- | ---: | ---: | ---: |
+| 1 | `cpu-reference` | 0.279678 | — | 0 |
+| 2 | `cuda-naive` | 461.917 | 1.000× | 3.55e-14 |
+| 3 | `cuda-naive-ilp4` | 459.575 | 0.995× | 9.95e-14 |
+| 4 | `cuda-naive-1x2` | 463.036 | 1.002× | 3.55e-14 |
+| 5 | `cuda-tiled-32` | 455.476 | 0.986× | 3.55e-14 |
+| 6 | `cuda-reg-2x2` | 464.389 | 1.005× | 3.55e-14 |
+| 7 | `cuda-reg-4x4` | 465.018 | **1.007×** | 3.55e-14 |
+| 8 | `cuda-reg-4x4-64` | 407.438 | 0.882× | 3.55e-14 |
+| 9 | `cublas-dgemm` | 412.719 | 0.894× | 3.55e-14 |
+
+本次端到端测试中，`cuda-reg-4x4` 最快，比 GPU naive 快约 0.7%。CPU reference 的 GFLOPS 明显低于 GPU，但它是普通三重循环版本，不代表 CPU AVX2 优化版本的性能。
+
+
