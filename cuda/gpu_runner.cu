@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "common.cu"
-#include "cpu.cu"
+#include "gemm_cpu.cu"
 #include "gemm_naive.cu"
 #include "gemm_naive_ilp4.cu"
 #include "gemm_naive_1x2.cu"
@@ -14,7 +14,7 @@
 #include "gemm_reg_2x2.cu"
 #include "gemm_reg_4x4.cu"
 #include "gemm_reg_4x4_64.cu"
-#include "cublas_dgemm.cu"
+#include "gemm_cublas.cu"
 
 int main(int argc, char **argv) {
   int min_size = 64, max_size = 1280;
@@ -33,13 +33,13 @@ int main(int argc, char **argv) {
   CUBLAS_CHECK(cublasCreate(&benchmark_cublas_handle));
   run_cpu_version(min_size, max_size);
   run_gpu_version(version_naive, min_size, max_size);
-  run_gpu_version(version_naive_ilp4, min_size, max_size);
-  run_gpu_version(version_naive_1x2, min_size, max_size);
-  run_gpu_version(version_tiled_32, min_size, max_size);
-  run_gpu_version(version_reg_2x2, min_size, max_size);
-  run_gpu_version(version_reg_4x4, min_size, max_size);
-  run_gpu_version(version_reg_4x4_64, min_size, max_size);
   run_gpu_version(version_cublas, min_size, max_size);
+  // run_gpu_version(version_naive_ilp4, min_size, max_size);
+  // run_gpu_version(version_naive_1x2, min_size, max_size);
+  // run_gpu_version(version_tiled_32, min_size, max_size);
+  // run_gpu_version(version_reg_2x2, min_size, max_size);
+  // run_gpu_version(version_reg_4x4, min_size, max_size);
+  // run_gpu_version(version_reg_4x4_64, min_size, max_size);
   CUBLAS_CHECK(cublasDestroy(benchmark_cublas_handle));
   return 0;
 }
