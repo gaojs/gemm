@@ -20,5 +20,3 @@ void launch_naive_ilp4(int m, int n, int k, const double *a, const double *b, do
   dim3 block(16, 16), grid((n + 15) / 16, (m + 15) / 16);
   gemm_naive_ilp4_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_naive_ilp4{"cuda-naive-ilp4", launch_naive_ilp4};

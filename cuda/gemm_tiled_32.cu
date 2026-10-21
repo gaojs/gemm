@@ -23,5 +23,3 @@ void launch_tiled_32(int m, int n, int k, const double *a, const double *b, doub
   dim3 block(TILE, TILE), grid((n + 31) / 32, (m + 31) / 32);
   gemm_tiled_32_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_tiled_32{"cuda-tiled-32", launch_tiled_32};

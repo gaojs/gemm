@@ -1,10 +1,5 @@
-#include <cuda_runtime.h>
-#include <cublas_v2.h>
-#include <chrono>
-#include <vector>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
+#include "common.cuh"
+
 #include "common.cu"
 #include "gemm_cpu.cu"
 #include "gemm_naive.cu"
@@ -15,6 +10,15 @@
 #include "gemm_reg_4x4.cu"
 #include "gemm_reg_4x4_64.cu"
 #include "gemm_cublas.cu"
+
+GpuVersion version_naive{"cuda-naive", launch_naive};
+GpuVersion version_naive_ilp4{"cuda-naive-ilp4", launch_naive_ilp4};
+GpuVersion version_naive_1x2{"cuda-naive-1x2", launch_naive_1x2};
+GpuVersion version_tiled_32{"cuda-tiled-32", launch_tiled_32};
+GpuVersion version_reg_2x2{"cuda-reg-2x2", launch_reg_2x2};
+GpuVersion version_reg_4x4{"cuda-reg-4x4", launch_reg_4x4};
+GpuVersion version_reg_4x4_64{"cuda-reg-4x4-64", launch_reg_4x4_64};
+GpuVersion version_cublas{"cublas", launch_dgemm_cublas};
 
 int main(int argc, char **argv) {
   int min_size = 64, max_size = 1280;

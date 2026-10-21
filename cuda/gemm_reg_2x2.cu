@@ -38,5 +38,3 @@ void launch_reg_2x2(int m, int n, int k, const double *a, const double *b, doubl
   dim3 block(16, 16), grid((n + 31) / 32, (m + 31) / 32);
   gemm_reg_2x2_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_reg_2x2{"cuda-reg-2x2", launch_reg_2x2};

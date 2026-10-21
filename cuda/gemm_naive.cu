@@ -13,5 +13,3 @@ void launch_naive(int m, int n, int k, const double *a, const double *b, double 
   dim3 block(16, 16), grid((n + 15) / 16, (m + 15) / 16);
   gemm_naive_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_naive{"cuda-naive", launch_naive};

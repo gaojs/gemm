@@ -15,7 +15,8 @@ fi
 BINARY=$(mktemp /tmp/gemm_runner.XXXXXX)
 RESULTS_TMP=$(mktemp /tmp/gemm_results.XXXXXX)
 trap 'rm -f "$BINARY" "$RESULTS_TMP"' EXIT
-"$NVCC" -O3 -std=c++14 -arch="$ARCH" cuda/gpu_runner.cu -lcublas -lcudart -o "$BINARY"
+"$NVCC" -O3 -std=c++14 -arch="$ARCH" \
+  cuda/gpu_runner.cu -lcublas -lcudart -o "$BINARY"
 if [[ $# -gt 0 ]]; then
   "$BINARY" "$1" | tee "$RESULTS_TMP"
 else

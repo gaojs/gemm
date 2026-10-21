@@ -1,3 +1,6 @@
+#include "common.cuh"
+#include <vector>
+
 void gemm(int m, int n, int k, const double *a, const double *b, double *c) {
   for (int i = 0; i < m; ++i) {
     for (int j = 0; j < n; ++j) {

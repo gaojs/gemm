@@ -12,7 +12,8 @@ CPU 基线是 `cuda/gemm_cpu.cu` 中的 `cpu-reference`，采用普通三重循�
 
 | 文件 | 作用 |
 | --- | --- |
-| `cuda/common.cu` | CUDA/cuBLAS 错误检查、矩阵生成、误差检查、结果输出和公共计时流程 |
+| `cuda/common.cuh` | CUDA/cuBLAS 错误检查宏、公共类型和函数声明 |
+| `cuda/common.cu` | 矩阵生成、误差检查、结果输出和公共计时流程实现 |
 | `cuda/gemm_cpu.cu` | CPU reference GEMM 实现 |
 | `cuda/gpu_runner.cu` | 主入口，依次运行 CPU、GPU 各版本和 cuBLAS |
 | `cuda/gemm_cublas.cu` | cuBLAS 双精度 GEMM 实现 |
@@ -32,7 +33,18 @@ Nsight Systems 用于观察 CUDA API、H2D/D2H 数据传输和 GPU kernel 时间
 ```bash
 cd /home/hill/gemm
 export LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY_PATH:-}
-nvcc -O3 -std=c++14 -arch=sm_89 -lineinfo cuda/gpu_runner.cu -lcublas -lcudart -o /tmp/gpu_gemm_profile.x
+for source in common gemm_cpu gemm_naive gemm_naive_ilp4 gemm_naive_1x2 \
+  gemm_tiled_32 gemm_reg_2x2 gemm_reg_4x4 gemm_reg_4x4_64 \
+  gemm_cublas gpu_runner; do
+  nvcc -O3 -std=c++14 -arch=sm_89 -lineinfo -dc \
+    -c "cuda/${source}.cu" -o "/tmp/${source}.o"
+done
+nvcc -O3 -std=c++14 -arch=sm_89 -lineinfo \
+  /tmp/common.o /tmp/gemm_cpu.o /tmp/gemm_naive.o \
+  /tmp/gemm_naive_ilp4.o /tmp/gemm_naive_1x2.o /tmp/gemm_tiled_32.o \
+  /tmp/gemm_reg_2x2.o /tmp/gemm_reg_4x4.o /tmp/gemm_reg_4x4_64.o \
+  /tmp/gemm_cublas.o /tmp/gpu_runner.o \
+  -lcublas -lcudart -o /tmp/gpu_gemm_profile.x
 ```
 
 A100 将 `sm_89` 改为 `sm_80`。采集 Nsight Systems 报告并汇总：
@@ -135,7 +147,7 @@ LD_LIBRARY_PATH=/usr/lib64:/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY
 ./cuda/run_benchmark.sh
 ```
 
-脚本会自动识别 GPU 架构，编译 `cuda/gpu_runner.cu`，并在项目虚拟环境安装 matplotlib 时生成性能图。结果保存在：
+脚本会自动识别 GPU 架构，编译 `cuda/gpu_runner.cu`（其中包含各版本 `.cu` 实现）生成基准程序；新增版本时，将其实现纳入 `gpu_runner.cu` 即可，无需修改脚本。在项目虚拟环境安装 matplotlib 时还会生成性能图。结果保存在：
 
 - RTX 4090 D：`fig-gpu-4090/gpu_results.m`、`gpu_comparison.png`；
 - A100：`fig-gpu-a100/gpu_results.m`、`gpu_comparison.png`。

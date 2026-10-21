@@ -20,5 +20,3 @@ void launch_naive_1x2(int m, int n, int k, const double *a, const double *b, dou
   dim3 block(16, 16), grid((n + 31) / 32, (m + 15) / 16);
   gemm_naive_1x2_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_naive_1x2{"cuda-naive-1x2", launch_naive_1x2};

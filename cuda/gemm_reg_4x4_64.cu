@@ -34,5 +34,3 @@ void launch_reg_4x4_64(int m, int n, int k, const double *a, const double *b, do
   dim3 block(16, 16), grid((n + 63) / 64, (m + 63) / 64);
   gemm_reg_4x4_64_kernel<<<grid, block>>>(m, n, k, a, b, c);
 }
-
-GpuVersion version_reg_4x4_64{"cuda-reg-4x4-64", launch_reg_4x4_64};

@@ -10,3 +10,8 @@ images/
 __pycache__/
 **/__pycache__/
 *.py[cod]
+/cuda-samples/
+*.cubin
+*.ptx
+*.sass
+/gpu_gemm_profile.xx
